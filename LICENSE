@@ -1,0 +1,18 @@
+NON-COMMERCIAL ACADEMIC AND RESEARCH LICENSE AGREEMENT
+
+Copyright (c) 2026 SCAI Lab (Spinal Cord Injury and Artificial Intelligence Lab). All rights reserved.
+
+Redistribution and use of this software (in source or binary forms, with or without modification) and its associated trained model weights/checkpoints are permitted solely for academic, educational, and non-profit research purposes, subject to the following terms and conditions:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions, and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions, and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. The software, source code, binary forms, and all associated model checkpoints/weights (located under the `models/` directory or downloaded separately) may NOT be used for any commercial purpose, including but not limited to:
+   - Integration into a commercial or profit-generating product, platform, or service.
+   - Use in paid consulting, corporate research, clinical trial services, or commercial patient diagnostics.
+   - Sublicensing, renting, leasing, selling, or distributing the software or derivatives for financial gain.
+
+4. Any publications, patents, research papers, presentations, or software derivatives that utilize this software or the associated digitization/classification pipeline must credit the original authors and cite this repository.
+
+THIS SOFTWARE AND MODEL WEIGHTS ARE PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES (INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT) ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

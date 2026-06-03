@@ -1,0 +1,12 @@
+# Ignore model checkpoints (heavy weights)
+models/
+
+# Streamlit run output directories
+output/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Local Streamlit config files
+.streamlit/
