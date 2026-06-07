@@ -38,46 +38,9 @@ The dashboard provides a premium, responsive user interface designed for researc
    - **Inference Mode (No Ground-Truth)**: If the uploaded CSV lacks diagnostic labels, the dashboard displays a downloadable **Predictions Table** detailing predicted class diagnoses and model confidence probabilities.
    - **Evaluation Mode (With Ground-Truth)**: If labels are present, the page calculates and plots performance metrics (Accuracy, F1-Score, Sensitivity, Specificity, Confusion Matrix).
 
-### Workstation Pipeline Architecture
+### 🔄 Workflow
 
-The diagram below illustrates the comprehensive data flow from image upload through computer vision digitization, grid reconstruction, signal verification, and time-series model inference:
-
-```mermaid
-graph TD
-    %% Styling
-    classDef pageStyle fill:#F8FAFC,stroke:#E2E8F0,stroke-width:2px;
-    classDef procStyle fill:#F0FDFA,stroke:#0D9488,stroke-width:2px;
-    classDef modelStyle fill:#FEF2F2,stroke:#EF4444,stroke-width:2px;
-
-    %% Image Digitizer Page
-    subgraph Page1 [📷 ECG Image Digitizer]
-        A[ECG Report Image Upload] -->|YOLO11 Full| B(Lead Bounding Boxes)
-        A -->|YOLO11 Lead Name| C(Lead Label Classification)
-        A -->|YOLO11 Pulse| D(Reference Calibration Pulses)
-        A -->|YOLO11 Patch| E(Waveform Contour Segmentation)
-        
-        B & C & D & E -->|Hough Lines & K-Means Grid| F[Calibrated mV Signal Extraction]
-        F -->|Save CSV| G(latest_digitized.csv)
-    end
-    class Page1 pageStyle;
-
-    %% Signal Viewer Page
-    subgraph Page2 [📈 ECG Signal Viewer]
-        I[ECG CSV Upload] --> H[Vega-Lite Interactive Visualizer]
-        H -->|Render| J[Stacked Leads / Overlaid Signals]
-        H -->|Calculate| K[Signal Statistics & Row Previews]
-    end
-    class Page2 pageStyle;
-
-    %% Classification Page
-    subgraph Page3 [❤️ ECG Classification]
-        I -->|Select Task| L[Pan-Tompkins Segmentation]
-        L -->|Reshape & Max-Abs Norm| M[sktime Numpy3D Formatter]
-        M -->|Load Pre-trained Model| N[Arsenal / Rocket / InceptionTime]
-        N -->|Predict Class & Probs| O[Predictions Table & Confidence]
-    end
-    class Page3 pageStyle;
-```
+The workstation coordinates the pipeline through four distinct steps: **Digitization**, **Analysis**, **Segmentation**, and **Classification**. The technical workflows for each process are documented below in their respective **How It Works** sections.
 
 ---
 
@@ -201,9 +164,27 @@ The classification engine supports three diagnostic tasks using the pre-trained 
 
 ---
 
-## 🛠️ How It Works: Signal Digitization Pipeline
+## 📷 How It Works: Signal Digitization
 
-The core class [digitization.py](file:///d:/Projects/ECG_Demo/digitization.py) operates a multi-stage sequential computer vision pipeline:
+The core class [digitization.py](file:///d:/Projects/ECG-Digitize-Classify-Demo/digitization.py) operates a multi-stage sequential computer vision pipeline to translate raster images into digitized signals:
+
+```mermaid
+graph TD
+    A[ECG Image Upload] --> B[Preprocessing: Otsu & Blurring]
+    B --> C[YOLOv11 Detection & Segmentation]
+    subgraph YOLOv11 Models
+        C1[yolo11_full: Lead Boundaries]
+        C2[yolo11_lead: Text Name Labels]
+        C3[yolo11_pulse: Calibration Pulses]
+        C4[yolo11_patch: Waveform Segments]
+    end
+    C --> C1 & C2 & C3 & C4
+    C1 & C2 & C3 & C4 --> D[Hough Lines Calibration]
+    D --> E[K-Means Row & Column Grid Construction]
+    E --> F[Anti-Leakage Connected Components Filter]
+    F --> G[Centroid Trace & Resampling to 500Hz]
+    G --> H[Export latest_digitized.csv]
+```
 
 1. **Preprocessing**: Cleans the scanned image using shadow-removal masks, Otsu binarization, and Gaussian blurring to isolate ink lines from paper textures.
 2. **YOLO Segmentation**: Applies a patched YOLO segmentation model at three crop scales (`4×`, `4.5×`, and `5×` height) to isolate individual lead waveform contours.
@@ -217,50 +198,39 @@ The core class [digitization.py](file:///d:/Projects/ECG_Demo/digitization.py) o
 
 ---
 
-## 📈 How It Works: Heartbeat Segmentation Pipeline
+## 📈 How It Works: Signal Analysis & Visualization
 
-To prepare digitized continuous signals for the pre-trained classification models, the backend runs the Pan-Tompkins algorithm:
+Once continuous signals are extracted, the dashboard runs analytical tasks and displays interactive previews:
 
+```mermaid
+graph TD
+    A[Upload Digitized CSV] --> B[Parse Lead Voltages & Timestamps]
+    B --> C[Vega-Lite Interactive Visualizer]
+    C --> C1[Render Stacked Leads]
+    C --> C2[Render Overlaid Signals]
+    B --> D[Compute Signal Statistics: Mean, SD, Min/Max]
+    D --> E[Display Summary Dataframes & Row Previews]
 ```
-                  ┌──────────────────────────────┐
-                  │   Continuous 500Hz Signal    │
-                  └──────────────┬───────────────┘
-                                 │
-                                 ▼
-                  ┌──────────────────────────────┐
-                  │    Bandpass Filter (5-15Hz)  │
-                  └──────────────┬───────────────┘
-                                 │
-                                 ▼
-                  ┌──────────────────────────────┐
-                  │       Derivative Filter      │
-                  └──────────────┬───────────────┘
-                                 │
-                                 ▼
-                  ┌──────────────────────────────┐
-                  │       Squaring Operation     │
-                  └──────────────┬───────────────┘
-                                 │
-                                 ▼
-                  ┌──────────────────────────────┐
-                  │    Moving Window Integration │
-                  └──────────────┬───────────────┘
-                                 │
-                                 ▼
-                  ┌──────────────────────────────┐
-                  │      Adaptive Thresholding   │
-                  └──────────────┬───────────────┘
-                                 │
-                                 ▼
-                  ┌──────────────────────────────┐
-                  │       Locate R-Peaks         │
-                  └──────────────┬───────────────┘
-                                 │
-                                 ▼
-                  ┌──────────────────────────────┐
-                  │    Extract 140-sample Beats  │
-                  │   (50ms pre-R, 150ms post-R) │
-                  └──────────────────────────────┘
+
+1. **Parse Signals**: Reads digitized CSV format, validating lead names and timestamps.
+2. **Vega-Lite Visualization**: Renders interactive charts supporting native client-side zoom, pan, and hover tooltips for all channels.
+3. **Signal Statistics**: Automatically computes statistical characteristics (mean, standard deviation, min/max values) for each lead.
+
+---
+
+## ⚡ How It Works: Heartbeat Segmentation
+
+To prepare continuous digitized signals for the classification models, the pipeline runs the Pan-Tompkins R-peak detection algorithm:
+
+```mermaid
+graph TD
+    A[Digitized 500Hz Signal] --> B[Bandpass Filter 5-15Hz]
+    B --> C[Derivative Filter]
+    C --> D[Squaring Operation]
+    D --> E[Moving Window Integration]
+    E --> F[Adaptive Thresholding & R-Peak Search]
+    F --> G[Extract 140-sample Beats: 50ms pre-R, 150ms post-R]
+    G --> H[Max-Absolute Voltage Normalization]
 ```
 
 1. **Filtering**: The Lead II signal is filtered via a bandpass filter (5-15 Hz) to suppress muscle noise, baseline wander, and T-wave interference.
@@ -269,6 +239,32 @@ To prepare digitized continuous signals for the pre-trained classification model
 4. **Integration**: A moving window integrator (typically 150ms wide) compiles the slope information into a peak window.
 5. **Adaptive Thresholding & Peak Search**: Dynamically computes threshold constants based on average noise and signal levels, locating R-peaks.
 6. **Beat Windowing**: Extracts a localized heartbeat around each R-peak (typically extending 50ms before and 150ms after the peak), normalizes the voltage per heartbeat using max-absolute scaling, and truncates/pads the resulting segments to the target model input width (e.g. 140 or 141 timesteps).
+
+---
+
+## 🧠 How It Works: Cardiac Classification
+
+The heartbeat segment tensors are evaluated using pre-trained time-series classification models:
+
+```mermaid
+graph TD
+    A[Segmented Heartbeats] --> B[Numpy3D Reshaping: N_instances × 12_leads × N_timesteps]
+    B --> C[Select Classification Task]
+    subgraph Model Registry
+        C1[Normal vs MI: Arsenal]
+        C2[OMI vs non-OMI: Rocket]
+        C3[Pre vs Post-Procedural MI: InceptionTime]
+    end
+    C --> C1 & C2 & C3
+    C1 & C2 & C3 --> D[Load Pre-Trained Pickled Estimator]
+    D --> E[Predict Class Labels & Probabilities]
+    E --> F[Generate Downloadable Predictions CSV]
+```
+
+1. **Numpy3D Formatting**: Formats the heartbeat segments into a standard `sktime` `Numpy3D` tensor with shape `(N_instances, 12_leads, N_timesteps)`.
+2. **Dynamic Task Selection**: Loads the pre-trained pickled model corresponding to the selected classification task.
+3. **Model Inference**: Evaluates the model to compute class predictions and probability confidences.
+4. **Result Generation**: Automatically builds downloadable prediction tables and calculates performance metrics if ground-truth labels are present in the dataset.
 
 ---
 
