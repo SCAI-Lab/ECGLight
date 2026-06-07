@@ -22,7 +22,7 @@ def render(config, classification_runner):
     )
     st.markdown(
         '<p class="section-subtitle">'
-        'Run diagnostic classification tasks (MI vs Normal, OMI vs non-OMI, Pre vs Post-Surgery) '
+        'Run diagnostic classification tasks (MI vs Normal, OMI vs non-OMI, Pre vs Post-Procedural MI) '
         'using advanced pre-trained models.'
         '</p>',
         unsafe_allow_html=True

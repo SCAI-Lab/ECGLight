@@ -1057,6 +1057,74 @@ class ECGImage:
 
         return num_cols
 
+    def clean_lead_mask(self, img, baseline_y):
+        """Remove leaked segments of neighboring leads from a single lead cell binary mask.
+
+        Parameters
+        ----------
+        img : np.ndarray
+            Binary mask for a single lead cell (H × W).
+        baseline_y : float
+            Y-coordinate of the row baseline relative to the cropped row mask.
+
+        Returns
+        -------
+        np.ndarray
+            Cleaned binary mask.
+        """
+        height, width = img.shape
+        if height < 10 or width < 10:
+            return img
+
+        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(img)
+        if num_labels <= 2:
+            return img
+
+        # Find the primary component (largest horizontal span)
+        primary_c = -1
+        max_w = -1
+        for c in range(1, num_labels):
+            w = stats[c, cv2.CC_STAT_WIDTH]
+            if w > max_w:
+                max_w = w
+                primary_c = c
+
+        if primary_c == -1:
+            return img
+
+        primary_area = stats[primary_c, cv2.CC_STAT_AREA]
+        cleaned_img = img.copy()
+
+        for c in range(1, num_labels):
+            if c == primary_c:
+                continue
+
+            c_top = stats[c, cv2.CC_STAT_TOP]
+            c_height = stats[c, cv2.CC_STAT_HEIGHT]
+            c_bottom = c_top + c_height
+            c_width = stats[c, cv2.CC_STAT_WIDTH]
+            c_area = stats[c, cv2.CC_STAT_AREA]
+            c_centroid_y = centroids[c][1]
+
+            # Heuristics to identify a leak:
+            # 1. It is relatively small (either narrow or small area)
+            is_small = (c_width < 0.35 * width) or (c_area < 0.25 * primary_area)
+
+            # 2. It is located near the vertical boundaries of the cell
+            near_boundary = (c_top < 0.15 * height) or (c_bottom > 0.85 * height)
+
+            # 3. It doesn't cross the baseline (with safety margin)
+            baseline_margin = max(5, int(0.08 * height))
+            crosses_baseline = (c_top - baseline_margin <= baseline_y <= c_bottom + baseline_margin)
+
+            # 4. It is far from the baseline
+            far_from_baseline = abs(c_centroid_y - baseline_y) > 0.2 * height
+
+            if is_small and near_boundary and not crosses_baseline and far_from_baseline:
+                cleaned_img[labels == c] = 0
+
+        return cleaned_img
+
     # ------------------------------------------------------------------
     # Grid construction
     # ------------------------------------------------------------------
@@ -1176,6 +1244,10 @@ class ECGImage:
 
                 kernel     = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
                 cell_slice = cv2.morphologyEx(cell_slice, cv2.MORPH_OPEN, kernel)
+
+                # Post-processing: Clean up leaked segments from neighboring leads
+                baseline_y = self.row_centers[row_idx] - row_limits[row_idx][0]
+                cell_slice = self.clean_lead_mask(cell_slice, baseline_y)
 
                 row_cells.append({
                     'lead':   self.layout[row_idx][col_idx],

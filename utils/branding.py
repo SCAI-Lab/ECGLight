@@ -24,12 +24,12 @@ def _load_logo_b64(filename: str) -> str | None:
 
 def render_sidebar_logo():
     """Render the SCAI Lab logo above the dashboard title in the sidebar."""
-    b64 = _load_logo_b64("scai_lab_logo.png")
+    b64 = _load_logo_b64("scai_lab_logo.svg")
     if b64:
         st.sidebar.markdown(
             f'<div style="text-align: center; padding: 8px 0 4px 0;">'
-            f'<img src="data:image/png;base64,{b64}" alt="SCAI Lab" '
-            f'style="height: 52px;" />'
+            f'<img src="data:image/svg+xml;base64,{b64}" alt="SCAI Lab" '
+            f'style="height: 65px;" />'
             f'</div>',
             unsafe_allow_html=True
         )

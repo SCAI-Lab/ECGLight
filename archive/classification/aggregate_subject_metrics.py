@@ -27,9 +27,9 @@ def calculate_metrics(df_subject):
     # Ground truth: since all beats for a subject have the same label, we just take the first
     y_true = df_subject['true_label_numeric'].values
     
-    # Prediction based on averaged probability for Pre-Surgery MI
-    # Assuming probability_Pre-Surgery MI >= 0.5 is Pre-Surgery (1)
-    y_pred = (df_subject['avg_prob_pre_surgery'] >= 0.5).astype(int)
+    # Prediction based on averaged probability for Pre-Procedural MI
+    # Assuming probability_Pre-Procedural MI >= 0.5 is Pre-Procedural MI (1)
+    y_pred = (df_subject['avg_prob_pre_procedural'] >= 0.5).astype(int)
     
     acc = accuracy_score(y_true, y_pred)
     prec = precision_score(y_true, y_pred, zero_division=0)
@@ -65,11 +65,11 @@ def main():
             # 2. Group by base subject ID
             # We average the probability and take the first true label (since it should be invariant for a subject)
             subject_group = df.groupby('base_subject_id').agg({
-                'probability_Pre-Surgery MI': 'mean',
+                'probability_Pre-Procedural MI': 'mean',
                 'true_label_numeric': 'first'
             }).reset_index()
             
-            subject_group.rename(columns={'probability_Pre-Surgery MI': 'avg_prob_pre_surgery'}, inplace=True)
+            subject_group.rename(columns={'probability_Pre-Procedural MI': 'avg_prob_pre_procedural'}, inplace=True)
             
             # 3. Calculate Metrics
             acc, prec, f1 = calculate_metrics(subject_group)

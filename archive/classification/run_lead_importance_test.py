@@ -30,7 +30,7 @@ def run_lead_importance_test(input_csv, output_dir):
     
     # Define features/leads
     leads = ['I', 'aVR', 'V1', 'V4', 'II', 'aVL', 'V2', 'V5', 'III', 'aVF', 'V3', 'V6']
-    label_map = {'Post-Surgery MI': 0, 'Pre-Surgery MI': 1}
+    label_map = {'Post-Procedural MI': 0, 'Pre-Procedural MI': 1}
     
     results = []
     

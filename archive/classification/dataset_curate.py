@@ -12,8 +12,8 @@ def process_ecg_data_wide_format(root_folder):
     base_path = Path(root_folder)
     
     # Process both classes
-    for class_name, class_folder in [("Pre-Surgery MI", "Pre"), 
-                                    ("Post-Surgery MI", "Post")]:
+    for class_name, class_folder in [("Pre-Procedural MI", "Pre"), 
+                                    ("Post-Procedural MI", "Post")]:
         class_path = base_path / class_folder
         
         if class_path.exists():

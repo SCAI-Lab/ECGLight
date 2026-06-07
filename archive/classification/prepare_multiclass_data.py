@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     # Option 3: Combine/merge classes under a new label (set to None to skip)
     # e.g. {'Surgery': ['Pre', 'Post'], 'Other': ['Dimi', 'Discharge']}
-    combine = {'Post-Surgery': ['Discharge', 'Dimi', 'Post'], 'Pre-Surgery': ['Index', 'Pre']}
+    combine = {'Post-Procedural MI': ['Discharge', 'Dimi', 'Post'], 'Pre-Procedural MI': ['Index', 'Pre']}
 
     print(f"Loading data from '{input_csv}'...")
     if not os.path.exists(input_csv):

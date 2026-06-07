@@ -1,7 +1,9 @@
 # ⚡ ECG Digitization & Classification Dashboard
 
 <p align="center">
-  <img src="assets/logo.png" alt="ECG Digitization & Classification Logo" width="180px" style="border-radius: 14px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);" />
+  <img src="assets/logo.png" alt="ECG Digitization & Classification Logo" width="180px" style="border-radius: 14px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08); margin-bottom: 15px;" />
+  <br />
+  <img src="assets/scai_lab_logo.svg" alt="SCAI Lab Logo" height="100px" />
 </p>
 
 An advanced, interactive Streamlit web workstation designed to convert printed/photographed 12-lead paper ECG reports into high-resolution digitized signals and carry out different types of classification over them. The suite is engineered to run with low computational resource requirements, operating seamlessly on a standard consumer laptop GPU (via CUDA) or running completely on CPU.
@@ -147,6 +149,14 @@ The repository is structured to maintain a clean root directory, moving utility 
    conda activate infer
    ```
 
+   > [!IMPORTANT]
+   > **Windows Compatibility & TensorFlow Setup**:
+   > If you are on Windows and encounter native runtime loading failures (`ImportError: DLL load failed while importing _pywrap_tensorflow_internal: A dynamic link library (DLL) initialization routine failed`), you need to install a stable version pairing of TensorFlow and Protobuf:
+   > ```bash
+   > pip install tensorflow==2.15.0 protobuf==4.25.3
+   > ```
+   > *(Make sure no background Streamlit or Python tasks are running when executing this command, to prevent file locking issues on `.pyd` libraries).*
+
 3. **Download Pre-Trained Model Weights**:
    Due to their file sizes, the YOLO detection checkpoints and pre-trained classifiers are hosted externally. Download the `models/` directory from the link below and place it directly in the root of the project:
    
@@ -176,9 +186,9 @@ The classification engine supports three diagnostic tasks using the pre-trained 
 
 | Classification Task | Model Type | Expected Input Shape | Test Accuracy | Positive Class |
 | :--- | :--- | :--- | :---: | :--- |
-| **Normal vs Myocardial Infarction (MI) - Segmented** | Arsenal | 12 leads × 140 timesteps | **91.8%** | `MYOCARDIAL_INFARCTION` |
+| **Normal vs Myocardial Infarction (MI) - Segmented** | Arsenal | 12 leads × 140 timesteps | **92.3%** | `MYOCARDIAL_INFARCTION` |
 | **Occlusive MI (OMI) vs non-OMI** | Rocket | 12 leads × 141 timesteps | **88.9%** | `OMI` |
-| **Pre-Surgery vs Post-Surgery** | InceptionTime | 12 leads × 140 timesteps | **91.4%** | `pre-procedural MI` |
+| **Pre-Procedural vs Post-Procedural MI** | InceptionTime | 12 leads × 140 timesteps | **91.4%** | `pre-procedural MI` |
 
 - **Arsenal**: An ensemble of ROCKET classifiers utilizing random convolutional kernels to extract feature representations combined with ridge regression.
 - **Rocket**: Random Omni-directional Kernel Extraction (ROCKET) classifier, computing kernel convolutions quickly for high-dimensional time-series data.
@@ -198,7 +208,7 @@ The core class [digitization.py](file:///d:/Projects/ECG_Demo/digitization.py) o
    - `yolo11_pulse`: Bounding boxes for the calibration reference pulses (typically 1mV high, representing vertical scale).
 4. **Scale Calibration**: Fits Hough lines to the calibration pulse boundaries. The pixel height determines the voltage scale (`volt/pixel`), while the width determines the time scale (`time/pixel`).
 5. **Grid Construction**: Employs K-Means clustering on lead coordinates to map rows and columns, automatically parsing standard Cabrera orders and grid formats (3×4, 4×3, 6×2, 12×1).
-6. **Signal Extraction**: Traces contours to extract raw pixel centroids, performs baseline correction, applies linear interpolation to bridge gaps, and resamples to a standard **500 Hz** frequency calibrated in **millivolts (mV)**.
+6. **Signal Extraction & Post-Processing**: Traces contours to extract raw pixel centroids, performs baseline correction, applies linear interpolation to bridge gaps, and resamples to a standard **500 Hz** frequency calibrated in **millivolts (mV)**. In addition, an **anti-leakage component filter** is executed per cell crop using connected components analysis to automatically identify the primary waveform trace and strip out smaller, boundary-adjacent components (leaked signals from neighboring leads) that sit far from the row baseline.
 
 ---
 
@@ -289,6 +299,20 @@ python archive/classification/run_inference.py --model omi_vs_nonomi --input dat
 # Custom output file path
 python archive/classification/run_inference.py --model ecg_surgery --input data/ecg_surgery_segmented_50_150_70.csv --output results/surgery_preds.csv
 ```
+
+---
+
+## 🤝 Collaborating Institutions
+
+This project was developed in collaboration with:
+
+<p align="center">
+  <img src="assets/ETH_Zürich_Logo_black.svg.png" alt="ETH Zürich" height="30px" style="vertical-align: middle; margin: 0 15px;" />
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="assets/Logo_of_SUPSI_Scuola_universitaria_professionale_della_Svizzera_italiana_01.png" alt="SUPSI" height="35px" style="vertical-align: middle; margin: 0 15px;" />
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="assets/Logo_Vanvitelli_university.svg.png" alt="Università della Campania Luigi Vanvitelli" height="35px" style="vertical-align: middle; margin: 0 15px;" />
+</p>
 
 ---
 

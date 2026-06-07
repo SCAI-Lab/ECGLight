@@ -278,7 +278,7 @@ def segment_uploaded_csv(input_csv_path, output_csv_path, target_fs=500):
             df_formatted['subject_id'] = 'subject_1'
         if 'class' not in df_formatted.columns:
             # Default placeholder label
-            df_formatted['class'] = 'Pre-Surgery MI'
+            df_formatted['class'] = 'Pre-Procedural MI'
         if 'timestamp' not in df_formatted.columns:
             df_formatted['timestamp'] = range(len(df_formatted))
             

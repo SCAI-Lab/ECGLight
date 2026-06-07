@@ -42,11 +42,11 @@ CLASSIFICATION_TASKS = {
         "labels": {0: "non-OMI", 1: "OMI"},
         "description": "Identifies Occlusive Myocardial Infarction (OMI) vs Non-Occlusive Myocardial Infarction/controls using the pre-trained Rocket classifier."
     },
-    "Pre-Surgery vs Post-Surgery": {
+    "Pre-Procedural vs Post-Procedural MI": {
         "model_dir": "ecg_surgery",
         "model": "InceptionTime",
         "labels": {0: "post-procedural MI", 1: "pre-procedural MI"},
-        "description": "Classifies pre-surgery MI vs post-surgery MI using the pre-trained InceptionTime deep learning time-series classifier."
+        "description": "Classifies pre-procedural MI vs post-procedural MI using the pre-trained InceptionTime deep learning time-series classifier."
     }
 }
 
