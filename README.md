@@ -307,12 +307,22 @@ python archive/classification/run_inference.py --model ecg_surgery --input data/
 
 This project was developed in collaboration with:
 
+- [ETH Zürich](https://ethz.ch)
+- [Università della Svizzera italiana (USI)](https://www.usi.ch)
+- [Università della Campania Luigi Vanvitelli](https://www.unicampania.it)
+
 <p align="center">
-  <img src="assets/ETH_Zürich_Logo_black.svg.png" alt="ETH Zürich" height="30px" style="vertical-align: middle; margin: 0 15px;" />
+  <a href="https://ethz.ch" target="_blank">
+    <img src="assets/ETH_Zürich_Logo_black.svg.png" alt="ETH Zürich" height="30px" style="vertical-align: middle; margin: 0 15px;" />
+  </a>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="assets/Logo_of_SUPSI_Scuola_universitaria_professionale_della_Svizzera_italiana_01.png" alt="SUPSI" height="35px" style="vertical-align: middle; margin: 0 15px;" />
+  <a href="https://www.usi.ch" target="_blank">
+    <img src="assets/usi_logo.png" alt="USI" height="35px" style="vertical-align: middle; margin: 0 15px;" />
+  </a>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="assets/Logo_Vanvitelli_university.svg.png" alt="Università della Campania Luigi Vanvitelli" height="35px" style="vertical-align: middle; margin: 0 15px;" />
+  <a href="https://www.unicampania.it" target="_blank">
+    <img src="assets/Logo_Vanvitelli_university.svg.png" alt="Università della Campania Luigi Vanvitelli" height="35px" style="vertical-align: middle; margin: 0 15px;" />
+  </a>
 </p>
 
 ---
