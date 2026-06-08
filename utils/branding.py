@@ -38,11 +38,12 @@ def render_sidebar_logo():
 def render_logo_footer():
     """
     Render institutional logos as a footer bar at the bottom of each page.
-    Order: ETH Zürich → USI → Vanvitelli (per user preference).
+    Order: ETH Zürich → EOC → USI → Vanvitelli (per user preference).
     """
     # Ordered list: (filename, alt-text, height)
     logos = [
         ("ETH_Zürich_Logo_black.svg.png", "ETH Zürich", "32px"),
+        ("eoc_logo.png", "Istituto Cardiocentro Ticino (EOC)", "38px"),
         ("usi_logo.png", "USI", "38px"),
         ("Logo_Vanvitelli_university.svg.png", "Università della Campania Luigi Vanvitelli", "38px"),
     ]

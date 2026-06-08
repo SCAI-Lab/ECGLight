@@ -308,12 +308,17 @@ python archive/classification/run_inference.py --model ecg_surgery --input data/
 This project was developed in collaboration with:
 
 - [ETH Zürich](https://ethz.ch)
+- [Istituto Cardiocentro Ticino (EOC)](https://www.cardiocentro.org)
 - [Università della Svizzera italiana (USI)](https://www.usi.ch)
 - [Università della Campania Luigi Vanvitelli](https://www.unicampania.it)
 
 <p align="center">
   <a href="https://ethz.ch" target="_blank">
     <img src="assets/ETH_Zürich_Logo_black.svg.png" alt="ETH Zürich" height="30px" style="vertical-align: middle; margin: 0 15px;" />
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.cardiocentro.org" target="_blank">
+    <img src="assets/eoc_logo.png" alt="Istituto Cardiocentro Ticino (EOC)" height="35px" style="vertical-align: middle; margin: 0 15px;" />
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://www.usi.ch" target="_blank">
