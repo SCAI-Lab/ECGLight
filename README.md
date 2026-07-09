@@ -1,4 +1,4 @@
-# ⚡ ECG Digitization & Classification Dashboard
+# ⚡ ECGLight: ECG Digitization & Classification Dashboard
 
 <table align="center" border="0" style="border-collapse: collapse; border: none;">
   <tr style="border: none;">
