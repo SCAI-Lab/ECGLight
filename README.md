@@ -15,7 +15,7 @@ An advanced, interactive Streamlit web workstation designed to convert printed/p
 
 ---
 
-## 📄 Citation
+## <a id="citation"></a>📄 Citation
 
 If you use this framework or repository in your research, please cite our arXiv preprint:
 
@@ -35,23 +35,23 @@ Alternatively, you can cite the repository as:
 
 ---
 
-## 📌 Table of Contents
+## <a id="table-of-contents"></a>📌 Table of Contents
+
+- [📄 Citation](#citation)
 - [🖥️ Web Dashboard Workstation Overview](#web-dashboard-workstation-overview)
-- [📁 Repository Structure & Directory Organization](#repository-structure-directory-organization)
 - [🚀 Installation & Setup](#installation-setup)
 - [🧠 Pre-Trained Classifiers & Tasks](#pre-trained-classifiers-tasks)
+- [🚀 Command Line Usage](#command-line-usage)
+- [📁 Repository Structure & Directory Organization](#repository-structure-directory-organization)
 - [📷 How It Works: Signal Digitization](#how-it-works-signal-digitization)
 - [📈 How It Works: Signal Analysis & Visualization](#how-it-works-signal-analysis-visualization)
 - [⚡ How It Works: Heartbeat Segmentation](#how-it-works-heartbeat-segmentation)
 - [🧠 How It Works: Cardiac Classification](#how-it-works-cardiac-classification)
-- [🚀 Command Line Usage](#command-line-usage)
 - [🤝 Collaborating Institutions](#collaborating-institutions)
 - [👥 Authors & Contact](#authors-contact)
 - [📄 License](#license)
 
----
-
-## 🖥️ Web Dashboard Workstation Overview
+## <a id="web-dashboard-workstation-overview"></a>🖥️ Web Dashboard Workstation Overview
 
 The dashboard provides a premium, responsive user interface designed for research, education, and clinical workflow exploration. It coordinates the digitization and classification pipelines into a unified, lightweight web application.
 
@@ -80,7 +80,109 @@ The workstation coordinates the pipeline through four distinct steps: **Digitiza
 
 ---
 
-## 📁 Repository Structure & Directory Organization
+## <a id="installation-setup"></a>🚀 Installation & Setup
+
+### Prerequisites
+- Python 3.9
+- CUDA-capable GPU recommended (automatically falls back to CPU if unavailable).
+
+### Conda Environment & Model Setup
+
+1. Clone the repository and navigate to the project directory:
+   ```bash
+   git clone https://github.com/scai-lab/ECG-Digitization-Classification.git
+   cd ECG-Digitization-Classification
+   ```
+
+2. Create the conda environment using the provided `environment.yml` configuration:
+   ```bash
+   conda env create -f environment.yml
+   conda activate infer
+   ```
+
+   > [!IMPORTANT]
+   > **Windows Compatibility & TensorFlow Setup**:
+   > If you are on Windows and encounter native runtime loading failures (`ImportError: DLL load failed while importing _pywrap_tensorflow_internal: A dynamic link library (DLL) initialization routine failed`), you need to install a stable version pairing of TensorFlow and Protobuf:
+   > ```bash
+   > pip install tensorflow==2.15.0 protobuf==4.25.3
+   > ```
+   > *(Make sure no background Streamlit or Python tasks are running when executing this command, to prevent file locking issues on `.pyd` libraries).*
+
+3. **Download Pre-Trained Model Weights**:
+   Due to their file sizes, the YOLO detection checkpoints and pre-trained classifiers are hosted externally. Download the `models/` directory from the link below and place it directly in the root of the project:
+   
+   👉 **[Download Pre-Trained Models Directory (ETH Zürich Polybox)](https://polybox.ethz.ch/index.php/s/GDACstPtsoTrrWH)**
+   
+   Once extracted, verify that the weights are located inside the directory tree structure:
+   ```text
+   models/
+   ├── digitization_models/
+   │   ├── yolo11_full/weights/best.pt
+   │   ├── yolo11_lead/weights/best.pt
+   │   ├── yolo11_pulse/weights/best.pt
+   │   └── yolo11_patch/weights/best.pt
+   └── classifier_models/
+       ├── mi_vs_normal_segmented/
+       ├── omi_vs_nonomi/
+       └── ecg_surgery/
+   ```
+
+Key packages installed by the environment: `torch 2.7`, `ultralytics 8.3`, `opencv-python 4.11`, `scikit-image 0.24`, `wfdb 4.3`, `patched-yolo-infer 1.3.8`, `sktime`, `streamlit`.
+
+---
+
+## <a id="pre-trained-classifiers-tasks"></a>🧠 Pre-Trained Classifiers & Tasks
+
+The classification engine supports three diagnostic tasks using the pre-trained weights in `classifier_models/`:
+
+| Classification Task | Model Type | Expected Input Shape | Test Accuracy | Positive Class |
+| :--- | :--- | :--- | :---: | :--- |
+| **Normal vs Myocardial Infarction (MI) - Segmented** | Arsenal | 12 leads × 140 timesteps | **92.3%** | `MYOCARDIAL_INFARCTION` |
+| **Occlusive MI (OMI) vs non-OMI** | Rocket | 12 leads × 141 timesteps | **88.9%** | `OMI` |
+| **Pre-Procedural vs Post-Procedural MI** | InceptionTime | 12 leads × 140 timesteps | **91.4%** | `pre-procedural MI` |
+
+- **Arsenal**: An ensemble of ROCKET classifiers utilizing random convolutional kernels to extract feature representations combined with ridge regression.
+- **Rocket**: Random Omni-directional Kernel Extraction (ROCKET) classifier, computing kernel convolutions quickly for high-dimensional time-series data.
+- **InceptionTime**: A deep convolutional network ensemble modeled on the Inception architecture, extracting multi-scale temporal features.
+
+---
+
+## <a id="command-line-usage"></a>🚀 Command Line Usage
+
+### Run Batch Digitization (`run_org.py`)
+
+The batch processing script processes nested hospital directories, exporting structured folders of digitized CSVs:
+
+1. Configure path variables at the top of `run_org.py`:
+   ```python
+   ORGANIZED_DIR = "../ecg_files/ECG_organized_all"   # Input dataset root
+   OUTPUT_DIR    = "../ecg_files/ECG_digitized"       # Mirrored CSV directory
+   CATEGORIES    = ["pre", "index", "post"]           # Categories to process
+   ```
+
+2. Run the script:
+   ```bash
+   python run_org.py
+   ```
+
+### Run Model Inference (`run_inference.py`)
+
+Execute predictions directly on digitized data from the command line using `run_inference.py` located in `archive/classification/`:
+
+```bash
+# MI vs Normal Segmented heartbeat classification
+python archive/classification/run_inference.py --model mi_vs_normal_segmented --input data/ptb_xl/segmented_heartbeats.csv
+
+# OMI vs non-OMI classification
+python archive/classification/run_inference.py --model omi_vs_nonomi --input data/ecg_matrix_omi_segmented_50_150_90.csv
+
+# Custom output file path
+python archive/classification/run_inference.py --model ecg_surgery --input data/ecg_surgery_segmented_50_150_70.csv --output results/surgery_preds.csv
+```
+
+---
+
+## <a id="repository-structure-directory-organization"></a>📁 Repository Structure & Directory Organization
 
 The repository is structured to maintain a clean root directory, moving utility runners, UI views, model checkpoints, and legacy/training scripts into distinct modules:
 
@@ -133,74 +235,7 @@ The repository is structured to maintain a clean root directory, moving utility 
 
 ---
 
-## 🚀 Installation & Setup
-
-### Prerequisites
-- Python 3.9
-- CUDA-capable GPU recommended (automatically falls back to CPU if unavailable).
-
-### Conda Environment & Model Setup
-
-1. Clone the repository and navigate to the project directory:
-   ```bash
-   git clone https://github.com/scai-lab/ECG-Digitization-Classification.git
-   cd ECG-Digitization-Classification
-   ```
-
-2. Create the conda environment using the provided `environment.yml` configuration:
-   ```bash
-   conda env create -f environment.yml
-   conda activate infer
-   ```
-
-   > [!IMPORTANT]
-   > **Windows Compatibility & TensorFlow Setup**:
-   > If you are on Windows and encounter native runtime loading failures (`ImportError: DLL load failed while importing _pywrap_tensorflow_internal: A dynamic link library (DLL) initialization routine failed`), you need to install a stable version pairing of TensorFlow and Protobuf:
-   > ```bash
-   > pip install tensorflow==2.15.0 protobuf==4.25.3
-   > ```
-   > *(Make sure no background Streamlit or Python tasks are running when executing this command, to prevent file locking issues on `.pyd` libraries).*
-
-3. **Download Pre-Trained Model Weights**:
-   Due to their file sizes, the YOLO detection checkpoints and pre-trained classifiers are hosted externally. Download the `models/` directory from the link below and place it directly in the root of the project:
-   
-   👉 **[Download Pre-Trained Models Directory (ETH Zürich Polybox)](https://polybox.ethz.ch/index.php/s/GDACstPtsoTrrWH)**
-   
-   Once extracted, verify that the weights are located inside the directory tree structure:
-   ```text
-   models/
-   ├── digitization_models/
-   │   ├── yolo11_full/weights/best.pt
-   │   ├── yolo11_lead/weights/best.pt
-   │   ├── yolo11_pulse/weights/best.pt
-   │   └── yolo11_patch/weights/best.pt
-   └── classifier_models/
-       ├── mi_vs_normal_segmented/
-       ├── omi_vs_nonomi/
-       └── ecg_surgery/
-   ```
-
-Key packages installed by the environment: `torch 2.7`, `ultralytics 8.3`, `opencv-python 4.11`, `scikit-image 0.24`, `wfdb 4.3`, `patched-yolo-infer 1.3.8`, `sktime`, `streamlit`.
-
----
-
-## 🧠 Pre-Trained Classifiers & Tasks
-
-The classification engine supports three diagnostic tasks using the pre-trained weights in `classifier_models/`:
-
-| Classification Task | Model Type | Expected Input Shape | Test Accuracy | Positive Class |
-| :--- | :--- | :--- | :---: | :--- |
-| **Normal vs Myocardial Infarction (MI) - Segmented** | Arsenal | 12 leads × 140 timesteps | **92.3%** | `MYOCARDIAL_INFARCTION` |
-| **Occlusive MI (OMI) vs non-OMI** | Rocket | 12 leads × 141 timesteps | **88.9%** | `OMI` |
-| **Pre-Procedural vs Post-Procedural MI** | InceptionTime | 12 leads × 140 timesteps | **91.4%** | `pre-procedural MI` |
-
-- **Arsenal**: An ensemble of ROCKET classifiers utilizing random convolutional kernels to extract feature representations combined with ridge regression.
-- **Rocket**: Random Omni-directional Kernel Extraction (ROCKET) classifier, computing kernel convolutions quickly for high-dimensional time-series data.
-- **InceptionTime**: A deep convolutional network ensemble modeled on the Inception architecture, extracting multi-scale temporal features.
-
----
-
-## 📷 How It Works: Signal Digitization
+## <a id="how-it-works-signal-digitization"></a>📷 How It Works: Signal Digitization
 
 The core class [digitization.py](file:///d:/Projects/ECGLight/digitization.py) operates a multi-stage sequential computer vision pipeline to translate raster images into digitized signals:
 
@@ -234,7 +269,7 @@ graph TD
 
 ---
 
-## 📈 How It Works: Signal Analysis & Visualization
+## <a id="how-it-works-signal-analysis-visualization"></a>📈 How It Works: Signal Analysis & Visualization
 
 Once continuous signals are extracted, the dashboard runs analytical tasks and displays interactive previews:
 
@@ -254,7 +289,7 @@ graph TD
 
 ---
 
-## ⚡ How It Works: Heartbeat Segmentation
+## <a id="how-it-works-heartbeat-segmentation"></a>⚡ How It Works: Heartbeat Segmentation
 
 To prepare continuous digitized signals for the classification models, the pipeline runs the Pan-Tompkins R-peak detection algorithm:
 
@@ -278,7 +313,7 @@ graph TD
 
 ---
 
-## 🧠 How It Works: Cardiac Classification
+## <a id="how-it-works-cardiac-classification"></a>🧠 How It Works: Cardiac Classification
 
 The heartbeat segment tensors are evaluated using pre-trained time-series classification models:
 
@@ -304,42 +339,7 @@ graph TD
 
 ---
 
-## 🚀 Command Line Usage
-
-### Run Batch Digitization (`run_org.py`)
-
-The batch processing script processes nested hospital directories, exporting structured folders of digitized CSVs:
-
-1. Configure path variables at the top of `run_org.py`:
-   ```python
-   ORGANIZED_DIR = "../ecg_files/ECG_organized_all"   # Input dataset root
-   OUTPUT_DIR    = "../ecg_files/ECG_digitized"       # Mirrored CSV directory
-   CATEGORIES    = ["pre", "index", "post"]           # Categories to process
-   ```
-
-2. Run the script:
-   ```bash
-   python run_org.py
-   ```
-
-### Run Model Inference (`run_inference.py`)
-
-Execute predictions directly on digitized data from the command line using `run_inference.py` located in `archive/classification/`:
-
-```bash
-# MI vs Normal Segmented heartbeat classification
-python archive/classification/run_inference.py --model mi_vs_normal_segmented --input data/ptb_xl/segmented_heartbeats.csv
-
-# OMI vs non-OMI classification
-python archive/classification/run_inference.py --model omi_vs_nonomi --input data/ecg_matrix_omi_segmented_50_150_90.csv
-
-# Custom output file path
-python archive/classification/run_inference.py --model ecg_surgery --input data/ecg_surgery_segmented_50_150_70.csv --output results/surgery_preds.csv
-```
-
----
-
-## 🤝 Collaborating Institutions
+## <a id="collaborating-institutions"></a>🤝 Collaborating Institutions
 
 This project was developed in collaboration with:
 
@@ -368,13 +368,13 @@ This project was developed in collaboration with:
 
 ---
 
-## 👥 Authors & Contact
+## <a id="authors-contact"></a>👥 Authors & Contact
 
 - **Shreyasvi Natraj** — [snatraj@ethz.ch](mailto:snatraj@ethz.ch)
 - **Cyrus Achtari**
 
 ---
 
-## 📄 License
+## <a id="license"></a>📄 License
 
 This project is released under the **Non-Commercial Academic and Research License Agreement**. Please refer to the [LICENSE](file:///d:/Projects/ECGLight/LICENSE) file in the repository root for the full licensing terms. The codebase and trained model weights are provided free of charge for personal, academic, and non-profit research use only. Commercial use is strictly prohibited.
