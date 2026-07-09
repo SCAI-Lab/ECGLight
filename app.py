@@ -1,6 +1,6 @@
 # app.py
 """
-Main entry point for the ECG Digitization and Classification Dashboard.
+Main entry point for the ECGLight Dashboard.
 Slim router that delegates to page modules in utils/.
 """
 
@@ -20,14 +20,14 @@ from utils.branding import render_sidebar_logo, render_logo_footer
 from utils.hardware import render_sidebar_hardware
 from utils import page_digitizer, page_csv_viewer, page_classifier
 
-# Backend runners (lazy-imported by pages that need them)
-from backend import digitization_runner, classification_runner
+# Backend runners are imported lazily inside page routing blocks below
+# to avoid loading torch/sklearn/scipy when the user only needs the CSV viewer.
 
 # ==============================================================================
 # PAGE CONFIG (must be the first Streamlit command)
 # ==============================================================================
 st.set_page_config(
-    page_title="ECG Digitization & Classification",
+    page_title="ECGLight",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -45,11 +45,12 @@ inject_custom_css()
 render_sidebar_logo()
 
 st.sidebar.markdown(
-    '<h1 style="font-size: 1.8rem; margin-bottom: 5px; font-weight: 800; letter-spacing: -0.5px;">⚡ <span class="glow-text">ECG DASHBOARD</span></h1>',
+    '<h1 style="font-size: 1.8rem; margin-bottom: 5px; font-weight: 800; letter-spacing: -0.5px; text-align: center; padding-right: 1.5rem;">'
+    '⚡ <span class="glow-text">ECGLight</span></h1>',
     unsafe_allow_html=True
 )
 st.sidebar.markdown(
-    '<p class="section-subtitle">Digitization & Classification Suite</p>',
+    '<p class="section-subtitle" style="text-align: center;">Lightweight Digitization & Classification Suite</p>',
     unsafe_allow_html=True
 )
 
@@ -96,9 +97,10 @@ yolo_configured = all([
 ])
 
 # ==============================================================================
-# PAGE ROUTING
+# PAGE ROUTING (lazy backend imports — only load heavy modules when needed)
 # ==============================================================================
 if page == "📷 ECG Image Digitizer":
+    from backend import digitization_runner
     page_digitizer.render(config, digitization_runner, yolo_configured)
     render_logo_footer()
 
@@ -107,5 +109,6 @@ elif page == "📈 ECG Signal Viewer":
     render_logo_footer()
 
 elif page == "❤️ ECG Classification":
+    from backend import classification_runner
     page_classifier.render(config, classification_runner)
     render_logo_footer()

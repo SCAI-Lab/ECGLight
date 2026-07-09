@@ -89,22 +89,14 @@ def find_r_peaks(ecg_signal, min_heart_rate=40, max_heart_rate=180, fs=500):
 
 def downsample_beat(beat_data, features, downsampling_factor):
     """
-    Downsample a single heartbeat by taking every nth sample
+    Downsample a single heartbeat by taking every nth sample.
+    Uses vectorized iloc slicing instead of row-by-row iteration.
     """
+    if downsampling_factor <= 1:
+        return beat_data
     try:
-        # Create a new DataFrame for downsampled data
-        downsampled_data = []
-        
-        # Take every nth sample
-        for i in range(0, len(beat_data), downsampling_factor):
-            if i < len(beat_data):
-                row = beat_data.iloc[i]
-                downsampled_data.append(row)
-        
-        if len(downsampled_data) > 0:
-            return pd.DataFrame(downsampled_data, columns=beat_data.columns)
-        else:
-            return None
+        downsampled = beat_data.iloc[::downsampling_factor]
+        return downsampled if len(downsampled) > 0 else None
     except Exception as e:
         print(f"Error in downsampling: {e}")
         return None
@@ -126,13 +118,15 @@ def segment_beats_around_r_peaks(subject_data, r_peaks, features, fs=500, target
     pre_r_original = int((pre_r_ms / 1000) * fs)
     post_r_original = int((post_r_ms / 1000) * fs)
     
+    min_beat_len = int((pre_r_original + post_r_original) * 0.7)
+    
     for r_peak in r_peaks:
         start_idx = max(0, r_peak - pre_r_original)
         end_idx = min(total_samples, r_peak + post_r_original)
         
         # Ensure we have enough samples for a complete beat
-        if (end_idx - start_idx) >= (pre_r_original + post_r_original) * 0.7:  # at least 70% of expected length
-            beat_data_original = subject_data.iloc[start_idx:end_idx].copy()
+        if (end_idx - start_idx) >= min_beat_len:
+            beat_data_original = subject_data.iloc[start_idx:end_idx]
             
             # Downsample the beat
             beat_data_downsampled = downsample_beat(beat_data_original, features, downsampling_factor)
@@ -148,21 +142,23 @@ def local_segment_heartbeats(input_csv, output_csv=None, min_heart_rate=40, max_
     """
     Segment ECG data into individual heartbeats for each subject with downsampling.
     Self-contained implementation.
+    Optimized: uses vectorized pandas concat instead of row-by-row dict assembly.
     """
     print("Loading ECG data for heartbeat segmentation...")
     df = pd.read_csv(input_csv, index_col=['subject_id', 'timestamp'])
     features = ['I', 'aVR', 'V1', 'V4', 'II', 'aVL', 'V2', 'V5', 'III', 'aVF', 'V3', 'V6']
     
     # Fill NaN values in features using linear interpolation and fallback to 0.0
-    for feat in features:
-        if feat in df.columns:
-            df[feat] = df[feat].interpolate(method='linear', limit_direction='both').fillna(0.0)
+    existing_features = [f for f in features if f in df.columns]
+    if existing_features:
+        df[existing_features] = df[existing_features].interpolate(method='linear', limit_direction='both').fillna(0.0)
             
     # Calculate downsampling factor
     downsampling_factor = fs // target_fs
     print(f"Downsampling from {fs} Hz to {target_fs} Hz (factor: {downsampling_factor})")
     
-    segmented_data = []
+    # Collect beat DataFrames in a list for a single pd.concat at the end
+    beat_frames = []
     
     # Get unique subjects
     subject_ids = df.index.get_level_values('subject_id').unique()
@@ -202,32 +198,28 @@ def local_segment_heartbeats(input_csv, output_csv=None, min_heart_rate=40, max_
         # Segment heartbeats around R-peaks
         heartbeats = segment_beats_around_r_peaks(subject_data, r_peaks, features, fs=fs, target_fs=target_fs)
         
-        # Add segmented heartbeats to results
+        # Vectorized beat assembly: build each beat as a small DataFrame, then concat once
         for i, (beat_data, r_peak_pos) in enumerate(heartbeats):
             beat_id = f"{subject_id}_beat{i+1}"
+            n_rows = len(beat_data)
             
-            # Create new index with beat information
-            for j, (timestamp, row) in enumerate(beat_data.iterrows()):
-                beat_row = {
-                    'subject_id': beat_id,
-                    'original_subject': subject_id,
-                    'beat_number': i + 1,
-                    'r_peak_position': int(r_peak_pos),
-                    'class': subject_class,
-                    'timestamp': j
-                }
-                
-                # Add all features
-                for feature in features:
-                    beat_row[feature] = float(row[feature])
-                
-                segmented_data.append(beat_row)
+            # Build the beat frame from the existing beat_data slice
+            beat_frame = beat_data[existing_features].copy()
+            beat_frame = beat_frame.reset_index(drop=True)
+            beat_frame['subject_id'] = beat_id
+            beat_frame['original_subject'] = subject_id
+            beat_frame['beat_number'] = i + 1
+            beat_frame['r_peak_position'] = int(r_peak_pos)
+            beat_frame['class'] = subject_class
+            beat_frame['timestamp'] = np.arange(n_rows)
+            
+            beat_frames.append(beat_frame)
         
-    # Create new DataFrame
-    if not segmented_data:
+    # Single concat at the end instead of thousands of dict appends
+    if not beat_frames:
         return pd.DataFrame()
         
-    segmented_df = pd.DataFrame(segmented_data)
+    segmented_df = pd.concat(beat_frames, ignore_index=True)
     
     # Set multi-index
     if not segmented_df.empty:
@@ -321,9 +313,10 @@ def segment_uploaded_csv(input_csv_path, output_csv_path, target_fs=500):
 # PRE-TRAINED MODEL LOADING & INFERENCE SUPPORT
 # ==============================================================================
 
-def load_pretrained_model_and_metadata(model_key):
+def _load_model_and_metadata_impl(model_key):
     """
-    Loads a pre-trained model and its metadata from models/classifier_models/{model_key}.
+    Internal implementation: loads a pre-trained model and its metadata from
+    models/classifier_models/{model_key}.
     """
     import json
     import pickle
@@ -391,11 +384,25 @@ def load_pretrained_model_and_metadata(model_key):
     return model, metadata
 
 
+# Try to use Streamlit cache; fall back to plain function if running outside Streamlit
+try:
+    import streamlit as st
+
+    @st.cache_resource(show_spinner="Loading pre-trained model...")
+    def load_pretrained_model_and_metadata(model_key):
+        """Cached wrapper — model pickle is only deserialized once per model_key."""
+        return _load_model_and_metadata_impl(model_key)
+except Exception:
+    # Fallback when Streamlit is not available (e.g. tests, scripts)
+    load_pretrained_model_and_metadata = _load_model_and_metadata_impl
+
+
 def preprocess_dataframe_for_inference(df, metadata):
     """
     Preprocesses raw or segmented DataFrame into numpy3D array for the pre-trained model.
     Reshapes each subject's signal to match the exact target length (n_timesteps),
     applies max absolute voltage normalization per subject, and returns the 3D numpy array.
+    Optimized: single grouped normalization instead of per-column loop.
     """
     features = metadata['features']
     n_timesteps = metadata['n_timesteps']
@@ -425,14 +432,12 @@ def preprocess_dataframe_for_inference(df, metadata):
         if missing:
             raise ValueError(f"Missing required lead columns in input: {missing}")
 
-    # Normalize features per subject
-    def safe_normalize(x):
-        max_val = x.abs().max()
-        return x / max_val if max_val > 0 else x
-
+    # Vectorized normalization: single grouped abs-max across all feature columns at once
     df_X = df_reset[features].copy()
-    for col in df_X.columns:
-        df_X[col] = df_X.groupby(level='subject_id')[col].transform(safe_normalize)
+    grouped_max = df_X.abs().groupby(level='subject_id').transform('max')
+    # Avoid division by zero
+    grouped_max = grouped_max.replace(0, 1.0)
+    df_X = df_X / grouped_max
 
     # Reshape to 3D array: (n_subjects, n_features, n_timesteps)
     subject_ids = df_X.index.get_level_values('subject_id').unique()
@@ -564,4 +569,3 @@ def calculate_evaluation_metrics(y_true_str, y_pred_str, class_labels, positive_
         "Confusion Matrix": cm.tolist(),
         "TN": int(tn), "FP": int(fp), "FN": int(fn), "TP": int(tp)
     }
-

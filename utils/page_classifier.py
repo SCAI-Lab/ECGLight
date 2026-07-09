@@ -70,7 +70,11 @@ def render(config, classification_runner):
 
 
 def _render_upload(config):
-    """Render the CSV upload section. Returns the path to the CSV file or None."""
+    """Render the CSV upload section. Returns the path to the CSV file or None.
+    
+    Caches the temp file path in session state so we don't re-write the
+    same bytes to disk on every Streamlit rerun.
+    """
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown("### 📤 Upload ECG Signals Dataset")
 
@@ -84,10 +88,23 @@ def _render_upload(config):
     csv_to_use = None
 
     if uploaded_csv is not None:
-        tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
-        tfile.write(uploaded_csv.read())
-        tfile.close()
-        csv_to_use = tfile.name
+        # Only write to disk if this is a new / different file
+        prev_name = st.session_state.get("_clf_upload_name")
+        prev_path = st.session_state.get("_clf_upload_path")
+
+        if prev_name == uploaded_csv.name and prev_path and os.path.exists(prev_path):
+            csv_to_use = prev_path
+        else:
+            tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
+            tfile.write(uploaded_csv.read())
+            tfile.close()
+            csv_to_use = tfile.name
+            st.session_state["_clf_upload_name"] = uploaded_csv.name
+            st.session_state["_clf_upload_path"] = csv_to_use
+    else:
+        # Clear cached path when file is removed
+        st.session_state.pop("_clf_upload_name", None)
+        st.session_state.pop("_clf_upload_path", None)
 
     if csv_to_use:
         _render_dataset_preview(csv_to_use)
@@ -95,27 +112,44 @@ def _render_upload(config):
     return csv_to_use
 
 
+@st.cache_data(show_spinner="Loading dataset preview...")
+def _load_preview_data(csv_path: str, _mtime: float):
+    """Load the CSV once and return all data needed for the preview.
+    
+    Cached on the file path + its mtime so it invalidates when the file changes.
+    Returns (head_df, row_count, leads_found, class_dist_or_none).
+    """
+    df = pd.read_csv(csv_path)
+    row_count = len(df)
+    
+    leads_found = [col for col in ['I', 'II', 'III', 'aVR', 'aVL', 'aVF',
+                                    'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
+                   if col in df.columns]
+    
+    class_dist = None
+    if 'class' in df.columns:
+        class_dist = df['class'].value_counts().to_dict()
+    
+    return df.head(10), row_count, leads_found, class_dist
+
+
 def _render_dataset_preview(csv_path):
-    """Show a preview of the loaded dataset."""
+    """Show a preview of the loaded dataset — single cached read instead of 3."""
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown("### 📊 Dataset Preview")
     try:
-        df_preview = pd.read_csv(csv_path, nrows=100)
-        st.dataframe(df_preview.head(10), use_container_width=True)
-
-        row_count = len(pd.read_csv(csv_path, usecols=[0]))
-        leads_found = [col for col in ['I', 'II', 'III', 'aVR', 'aVL', 'aVF',
-                                        'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
-                       if col in df_preview.columns]
+        mtime = os.path.getmtime(csv_path)
+        head_df, row_count, leads_found, class_dist = _load_preview_data(csv_path, mtime)
+        
+        st.dataframe(head_df, use_container_width=True)
         st.markdown(
             f"**Dataset Summary:**\n"
             f"- **Total Rows**: `{row_count:,}` samples\n"
             f"- **Available Leads**: `{leads_found}`"
         )
 
-        if 'class' in df_preview.columns:
-            classes_found = pd.read_csv(csv_path, usecols=['class'])['class'].value_counts().to_dict()
-            st.markdown(f"- **Class Distribution**: `{classes_found}`")
+        if class_dist is not None:
+            st.markdown(f"- **Class Distribution**: `{class_dist}`")
     except Exception as e:
         st.error(f"Error parsing CSV file: {e}")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -140,7 +174,7 @@ def _render_controls(config, classification_runner, csv_to_use, dep_ok):
         unsafe_allow_html=True
     )
 
-    # Load pre-trained model metadata to display stats
+    # Load pre-trained model metadata to display stats (now cached by the runner)
     try:
         _, metadata = classification_runner.load_pretrained_model_and_metadata(task_meta['model_dir'])
         st.success(f"🎯 **Pre-trained model found!**")
@@ -224,6 +258,33 @@ def _run_classification(config, classification_runner, csv_path, task_meta, sele
         st.exception(e)
 
 
+@st.cache_data(show_spinner=False)
+def _build_confusion_matrix_figure(cm_list, class_labels_mapped):
+    """Build and cache the confusion matrix matplotlib figure."""
+    fig_cm, ax_cm = plt.subplots(figsize=(4, 4))
+    cm_arr = np.array(cm_list)
+    ax_cm.imshow(cm_arr, interpolation='nearest', cmap=plt.cm.Reds)
+
+    ax_cm.set_xticks(range(len(class_labels_mapped)))
+    ax_cm.set_yticks(range(len(class_labels_mapped)))
+    ax_cm.set_xticklabels(class_labels_mapped, fontsize=8)
+    ax_cm.set_yticklabels(class_labels_mapped, fontsize=8)
+    ax_cm.set_xlabel("Predicted Label", fontsize=9)
+    ax_cm.set_ylabel("True Label", fontsize=9)
+
+    for r in range(cm_arr.shape[0]):
+        for c in range(cm_arr.shape[1]):
+            ax_cm.text(c, r, f"{cm_arr[r, c]}",
+                       ha="center", va="center",
+                       color="white" if cm_arr[r, c] > (cm_arr.max() / 2) else "black",
+                       fontweight="bold")
+
+    fig_cm.patch.set_facecolor('white')
+    ax_cm.set_facecolor('white')
+    plt.tight_layout()
+    return fig_cm
+
+
 def _show_results(task_meta, selected_task):
     """Display execution logs, performance metrics, confusion matrix, and predictions table."""
     results = st.session_state["clf_results"]
@@ -274,28 +335,10 @@ def _show_results(task_meta, selected_task):
                 f"- **True Positives (TP)**: `{metrics['TP']}`"
             )
         with col_cm2:
-            fig_cm, ax_cm = plt.subplots(figsize=(4, 4))
-            cm_arr = np.array(metrics["Confusion Matrix"])
-            ax_cm.imshow(cm_arr, interpolation='nearest', cmap=plt.cm.Reds)
-
             class_labels_mapped = list(task_meta["labels"].values())
-            ax_cm.set_xticks(range(len(class_labels_mapped)))
-            ax_cm.set_yticks(range(len(class_labels_mapped)))
-            ax_cm.set_xticklabels(class_labels_mapped, fontsize=8)
-            ax_cm.set_yticklabels(class_labels_mapped, fontsize=8)
-            ax_cm.set_xlabel("Predicted Label", fontsize=9)
-            ax_cm.set_ylabel("True Label", fontsize=9)
-
-            for r in range(cm_arr.shape[0]):
-                for c in range(cm_arr.shape[1]):
-                    ax_cm.text(c, r, f"{cm_arr[r, c]}",
-                               ha="center", va="center",
-                               color="white" if cm_arr[r, c] > (cm_arr.max() / 2) else "black",
-                               fontweight="bold")
-
-            fig_cm.patch.set_facecolor('white')
-            ax_cm.set_facecolor('white')
-            plt.tight_layout()
+            fig_cm = _build_confusion_matrix_figure(
+                metrics["Confusion Matrix"], class_labels_mapped
+            )
             st.pyplot(fig_cm)
 
         st.markdown('</div>', unsafe_allow_html=True)

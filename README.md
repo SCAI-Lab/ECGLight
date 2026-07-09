@@ -1,4 +1,4 @@
-# ⚡ ECGLight: ECG Digitization & Classification Dashboard
+# ⚡ ECG Digitization & Classification Dashboard
 
 <table align="center" border="0" style="border-collapse: collapse; border: none;">
   <tr style="border: none;">
@@ -12,6 +12,42 @@
 </table>
 
 An advanced, interactive Streamlit web workstation designed to convert printed/photographed 12-lead paper ECG reports into high-resolution digitized signals and carry out different types of classification over them. The suite is engineered to run with low computational resource requirements, operating seamlessly on a standard consumer laptop GPU (via CUDA) or running completely on CPU.
+
+---
+
+## 📄 Citation
+
+If you use this framework or repository in your research, please cite our arXiv preprint:
+
+```bibtex
+@article{natraj2026ecglight,
+  title={ECGLight: Compute-Light Framework For Paper ECG Digitization and Myocardial Infarction Screening},
+  author={Natraj, Shreyasvi and Achtari, Cyrus and Gragnano, Felice and Milzi, Andrea and Valgimigli, Marco and Paez-Granados, Diego},
+  journal={arXiv preprint arXiv:2607.07683},
+  year={2026},
+  url={https://arxiv.org/abs/2607.07683},
+  doi={10.48550/arXiv.2607.07683}
+}
+```
+
+Alternatively, you can cite the repository as:
+> Natraj, S., Achtari, C., Gragnano, F., Milzi, A., Valgimigli, M., & Paez-Granados, D. (2026). ECGLight: Compute-Light Framework For Paper ECG Digitization and Myocardial Infarction Screening. *arXiv preprint arXiv:2607.07683*. https://arxiv.org/abs/2607.07683
+
+---
+
+## 📌 Table of Contents
+- [🖥️ Web Dashboard Workstation Overview](#web-dashboard-workstation-overview)
+- [📁 Repository Structure & Directory Organization](#repository-structure-directory-organization)
+- [🚀 Installation & Setup](#installation-setup)
+- [🧠 Pre-Trained Classifiers & Tasks](#pre-trained-classifiers-tasks)
+- [📷 How It Works: Signal Digitization](#how-it-works-signal-digitization)
+- [📈 How It Works: Signal Analysis & Visualization](#how-it-works-signal-analysis-visualization)
+- [⚡ How It Works: Heartbeat Segmentation](#how-it-works-heartbeat-segmentation)
+- [🧠 How It Works: Cardiac Classification](#how-it-works-cardiac-classification)
+- [🚀 Command Line Usage](#command-line-usage)
+- [🤝 Collaborating Institutions](#collaborating-institutions)
+- [👥 Authors & Contact](#authors-contact)
+- [📄 License](#license)
 
 ---
 
@@ -166,7 +202,7 @@ The classification engine supports three diagnostic tasks using the pre-trained 
 
 ## 📷 How It Works: Signal Digitization
 
-The core class [digitization.py](file:///d:/Projects/ECG-Digitize-Classify-Demo/digitization.py) operates a multi-stage sequential computer vision pipeline to translate raster images into digitized signals:
+The core class [digitization.py](file:///d:/Projects/ECGLight/digitization.py) operates a multi-stage sequential computer vision pipeline to translate raster images into digitized signals:
 
 ```mermaid
 graph TD
@@ -341,4 +377,4 @@ This project was developed in collaboration with:
 
 ## 📄 License
 
-This project is released under the **Non-Commercial Academic and Research License Agreement**. Please refer to the [LICENSE](file:///d:/Projects/ECG-Digitize-Classify-Demo/LICENSE) file in the repository root for the full licensing terms. The codebase and trained model weights are provided free of charge for personal, academic, and non-profit research use only. Commercial use is strictly prohibited.
+This project is released under the **Non-Commercial Academic and Research License Agreement**. Please refer to the [LICENSE](file:///d:/Projects/ECGLight/LICENSE) file in the repository root for the full licensing terms. The codebase and trained model weights are provided free of charge for personal, academic, and non-profit research use only. Commercial use is strictly prohibited.

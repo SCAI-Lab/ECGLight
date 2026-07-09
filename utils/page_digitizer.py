@@ -59,19 +59,28 @@ def render(config, digitization_runner, yolo_configured):
                 st.session_state.pop("digitized_df", None)
                 st.session_state.pop("digitized_name", None)
                 st.session_state["last_uploaded_name"] = uploaded_file.name
+                # Write to a new temp file only when the upload changes
+                st.session_state.pop("_dig_upload_path", None)
 
-            # Save uploaded file to temp file to be processed by OpenCV/ultralytics
-            tfile = tempfile.NamedTemporaryFile(
-                delete=False, suffix=os.path.splitext(uploaded_file.name)[1]
-            )
-            tfile.write(uploaded_file.read())
-            tfile.close()
-            image_to_use = tfile.name
+            # Cache the temp file path in session state so we don't re-write on every rerun
+            cached_path = st.session_state.get("_dig_upload_path")
+            if cached_path and os.path.exists(cached_path):
+                image_to_use = cached_path
+            else:
+                tfile = tempfile.NamedTemporaryFile(
+                    delete=False, suffix=os.path.splitext(uploaded_file.name)[1]
+                )
+                tfile.write(uploaded_file.read())
+                tfile.close()
+                image_to_use = tfile.name
+                st.session_state["_dig_upload_path"] = image_to_use
+
             image_name = os.path.splitext(uploaded_file.name)[0]
         else:
             # Clear state if file is removed
             st.session_state.pop("digitized_df", None)
             st.session_state.pop("digitized_name", None)
+            st.session_state.pop("_dig_upload_path", None)
             st.session_state["last_uploaded_name"] = None
 
         # Display results or trigger button

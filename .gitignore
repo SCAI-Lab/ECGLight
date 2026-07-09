@@ -10,3 +10,6 @@ __pycache__/
 
 # Local Streamlit config files
 .streamlit/
+
+# Legacy/archive code directories (retained locally but excluded from version control)
+archive/
