@@ -1,5 +1,6 @@
 # ⚡ ECGLight: ECG Digitization & Classification Dashboard
 
+<!--
 <table align="center" border="0" style="border-collapse: collapse; border: none;">
   <tr style="border: none;">
     <td align="center" valign="middle" style="border: none; padding-right: 40px;">
@@ -10,34 +11,12 @@
     </td>
   </tr>
 </table>
+-->
 
 An advanced, interactive Streamlit web workstation designed to convert printed/photographed 12-lead paper ECG reports into high-resolution digitized signals and carry out different types of classification over them. The suite is engineered to run with low computational resource requirements, operating seamlessly on a standard consumer laptop GPU (via CUDA) or running completely on CPU.
 
----
-
-## <a id="citation"></a>📄 Citation
-
-If you use this framework or repository in your research, please cite our arXiv preprint:
-
-```bibtex
-@article{natraj2026ecglight,
-  title={ECGLight: Compute-Light Framework For Paper ECG Digitization and Myocardial Infarction Screening},
-  author={Natraj, Shreyasvi and Achtari, Cyrus and Gragnano, Felice and Milzi, Andrea and Valgimigli, Marco and Paez-Granados, Diego},
-  journal={arXiv preprint arXiv:2607.07683},
-  year={2026},
-  url={https://arxiv.org/abs/2607.07683},
-  doi={10.48550/arXiv.2607.07683}
-}
-```
-
-Alternatively, you can cite the repository as:
-> Natraj, S., Achtari, C., Gragnano, F., Milzi, A., Valgimigli, M., & Paez-Granados, D. (2026). ECGLight: Compute-Light Framework For Paper ECG Digitization and Myocardial Infarction Screening. *arXiv preprint arXiv:2607.07683*. https://arxiv.org/abs/2607.07683
-
----
-
 ## <a id="table-of-contents"></a>📌 Table of Contents
 
-- [📄 Citation](#citation)
 - [🖥️ Web Dashboard Workstation Overview](#web-dashboard-workstation-overview)
 - [🚀 Installation & Setup](#installation-setup)
 - [🧠 Pre-Trained Classifiers & Tasks](#pre-trained-classifiers-tasks)
@@ -48,6 +27,7 @@ Alternatively, you can cite the repository as:
 - [⚡ How It Works: Heartbeat Segmentation](#how-it-works-heartbeat-segmentation)
 - [🧠 How It Works: Cardiac Classification](#how-it-works-cardiac-classification)
 - [🤝 Collaborating Institutions](#collaborating-institutions)
+- [📄 Citation](#citation)
 - [👥 Authors & Contact](#authors-contact)
 - [📄 License](#license)
 
@@ -365,6 +345,21 @@ This project was developed in collaboration with:
     <img src="assets/Logo_Vanvitelli_university.svg.png" alt="Università della Campania Luigi Vanvitelli" height="35px" style="vertical-align: middle; margin: 0 15px;" />
   </a>
 </p>
+
+---
+
+## <a id="citation"></a>📄 Citation
+
+```bibtex
+@article{natraj2026ecglight,
+  title={ECGLight: Compute-Light Framework For Paper ECG Digitization and Myocardial Infarction Screening},
+  author={Natraj, Shreyasvi and Achtari, Cyrus and Gragnano, Felice and Milzi, Andrea and Valgimigli, Marco and Paez-Granados, Diego},
+  journal={arXiv preprint arXiv:2607.07683},
+  year={2026},
+  url={https://arxiv.org/abs/2607.07683},
+  doi={10.48550/arXiv.2607.07683}
+}
+```
 
 ---
 
