@@ -11,17 +11,6 @@
 
 <br/>
 
-<table align="center" border="0" style="border-collapse: collapse; border: none;">
-  <tr style="border: none;">
-    <td align="center" valign="middle" style="border: none; padding-right: 35px;">
-      <img src="assets/logo.png" alt="ECGLight Workstation Logo" width="180px" style="border-radius: 14px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.1);" />
-    </td>
-    <td align="center" valign="middle" style="border: none;">
-      <img src="assets/scai_lab_logo.svg" alt="SCAI Lab Logo" height="95px" />
-    </td>
-  </tr>
-</table>
-
 </div>
 
 ---
@@ -93,7 +82,10 @@ The ECGLight workstation provides a responsive user interface designed for clini
 
 ### 🔄 End-to-End Workflow
 
-The pipeline operates in four coordinated phases: **Digitization** $ightarrow$ **Analysis** $ightarrow$ **Segmentation** $ightarrow$ **Classification**. Architectural flowcharts for each phase are provided in the **How It Works** sections below.
+The pipeline operates in four coordinated phases: **Digitization** $
+ightarrow$ **Analysis** $
+ightarrow$ **Segmentation** $
+ightarrow$ **Classification**. Architectural flowcharts for each phase are provided in the **How It Works** sections below.
 
 ---
 
