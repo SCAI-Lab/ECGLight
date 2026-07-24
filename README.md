@@ -8,9 +8,6 @@
 [![Ultralytics YOLOv11](https://img.shields.io/badge/YOLOv11-Ultralytics-00FFFF.svg)](https://github.com/ultralytics/ultralytics)
 [![Streamlit Workstation](https://img.shields.io/badge/Streamlit-Web%20App-FF4B4B.svg)](#web-dashboard-workstation-overview)
 [![License: Non-Commercial](https://img.shields.io/badge/License-Non--Commercial-green.svg)](#license)
-
-<br/>
-
 </div>
 
 ---
