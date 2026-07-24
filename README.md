@@ -1,22 +1,57 @@
-# ⚡ ECGLight: ECG Digitization & Classification Dashboard
+# ⚡ ECGLight: Compute-Light Framework for Paper ECG Digitization & Myocardial Infarction Screening
 
-<!--
+<div align="center">
+
+[![arXiv](https://img.shields.io/badge/arXiv-2607.07683-b31b1b.svg)](https://arxiv.org/abs/2607.07683)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C.svg)](https://pytorch.org/)
+[![Ultralytics YOLOv11](https://img.shields.io/badge/YOLOv11-Ultralytics-00FFFF.svg)](https://github.com/ultralytics/ultralytics)
+[![Streamlit Workstation](https://img.shields.io/badge/Streamlit-Web%20App-FF4B4B.svg)](#web-dashboard-workstation-overview)
+[![License: Non-Commercial](https://img.shields.io/badge/License-Non--Commercial-green.svg)](#license)
+
+<br/>
+
 <table align="center" border="0" style="border-collapse: collapse; border: none;">
   <tr style="border: none;">
-    <td align="center" valign="middle" style="border: none; padding-right: 40px;">
-      <img src="assets/logo.png" alt="ECG Digitization & Classification Logo" width="180px" style="border-radius: 14px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);" />
+    <td align="center" valign="middle" style="border: none; padding-right: 35px;">
+      <img src="assets/logo.png" alt="ECGLight Workstation Logo" width="180px" style="border-radius: 14px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.1);" />
     </td>
     <td align="center" valign="middle" style="border: none;">
-      <img src="assets/scai_lab_logo.svg" alt="SCAI Lab Logo" height="100px" />
+      <img src="assets/scai_lab_logo.svg" alt="SCAI Lab Logo" height="95px" />
     </td>
   </tr>
 </table>
--->
 
-An advanced, interactive Streamlit web workstation designed to convert printed/photographed 12-lead paper ECG reports into high-resolution digitized signals and carry out different types of classification over them. The suite is engineered to run with low computational resource requirements, operating seamlessly on a standard consumer laptop GPU (via CUDA) or running completely on CPU.
+</div>
+
+---
+
+## <a id="abstract-key-highlights"></a>📌 Abstract & Key Highlights
+
+**ECGLight** is an end-to-end, compute-light framework and interactive web workstation for converting paper/photographed 12-lead ECG records into high-fidelity 500 Hz digitized signals and performing automated screening for Myocardial Infarction (MI) and Occlusive MI (OMI) pathologies.
+
+> 💡 **Designed for Low-Resource & Remote Settings**: ECGLight runs completely on CPU-only hardware in **<30 seconds per ECG** without requiring cloud connectivity or expensive GPU infrastructure, democratizing AI-based decision support for clinics worldwide.
+
+### ✨ Key Features & Capabilities
+- **📷 High-Fidelity Signal Digitization**: Multi-stage computer vision pipeline combining sequential YOLOv11 object detection, scale calibration via Hough lines, K-Means grid construction, and an anti-leakage connected-component filter to extract clean 500 Hz 12-lead signals from smartphone photos or scans.
+- **❤️ High-Accuracy MI & OMI Screening**:
+  - **95.51% Accuracy** ($F_1 = 0.9519$) for MI detection on the benchmark PTB-XL dataset (21,799 ECGs).
+  - **88.89% Accuracy** ($F_1 = 0.8862$) for Occlusive MI (OMI) screening on the hospital-acquired ECG-Matrix dataset.
+- **⚡ On-Device & Resource-Efficient**: Fully functional on standard consumer laptop CPUs or CUDA GPUs.
+- **🖥️ Interactive Web Dashboard Workstation**: Streamlit workstation featuring real-time signal viewing, step-by-step digitization previews, R-peak beat segmentation, and downloadable diagnostic prediction tables.
+
+---
+
+## <a id="news-updates"></a>📰 News & Updates
+- **[2026/07]** 📄 Paper released on arXiv: [ECGLight: Compute-Light Framework For Paper ECG Digitization and Myocardial Infarction Screening](https://arxiv.org/abs/2607.07683).
+- **[2026/06]** 🚀 Open-source release of the ECGLight web dashboard workstation and pre-trained weights repository.
+
+---
 
 ## <a id="table-of-contents"></a>📌 Table of Contents
 
+- [📌 Abstract & Key Highlights](#abstract-key-highlights)
+- [📰 News & Updates](#news-updates)
 - [🖥️ Web Dashboard Workstation Overview](#web-dashboard-workstation-overview)
 - [🚀 Installation & Setup](#installation-setup)
 - [🧠 Pre-Trained Classifiers & Tasks](#pre-trained-classifiers-tasks)
@@ -27,54 +62,56 @@ An advanced, interactive Streamlit web workstation designed to convert printed/p
 - [⚡ How It Works: Heartbeat Segmentation](#how-it-works-heartbeat-segmentation)
 - [🧠 How It Works: Cardiac Classification](#how-it-works-cardiac-classification)
 - [🤝 Collaborating Institutions](#collaborating-institutions)
-- [📄 Citation](#citation)
 - [👥 Authors & Contact](#authors-contact)
+- [📄 Citation](#citation)
 - [📄 License](#license)
+
+---
 
 ## <a id="web-dashboard-workstation-overview"></a>🖥️ Web Dashboard Workstation Overview
 
-The dashboard provides a premium, responsive user interface designed for research, education, and clinical workflow exploration. It coordinates the digitization and classification pipelines into a unified, lightweight web application.
+The ECGLight workstation provides a responsive user interface designed for clinical workflow exploration, research, and education. It unifies the computer vision digitization and diagnostic classification models into a seamless local web application.
 
 ### Workstation Modules
 
 1. **📷 ECG Image Digitizer**:
-   - Upload any scanned or photographed ECG image (`.png`, `.jpg`, `.jpeg`).
-   - Run the sequential YOLOv11 pipeline step-by-step with real-time progress indicators.
-   - Outputs a summary of detected leads and total samples.
-   - Automatically saves the digitized CSV to disk under `output/digitization/latest_digitized.csv` for downstream consumption.
+   - Upload scanned or photographed ECG images (`.png`, `.jpg`, `.jpeg`).
+   - Execute the sequential YOLOv11 detection pipeline with real-time visual progress indicators.
+   - Summarizes detected leads, calibrated sampling rates, and total extracted samples.
+   - Automatically exports the digitized time-series CSV to `output/digitization/latest_digitized.csv`.
    
 2. **📈 ECG Signal Viewer**:
-   - Visualizes multi-channel ECG signals interactively using client-side native Streamlit line charts (supporting zoom, pan, and hover tooltips).
-   - Supports stacked subplots (with distinct clinical colors for each lead: clinical red, teal, deep blue, yellow, purple, etc.) or overlaid graphs.
-   - Displays statistical summaries (mean, standard deviation, min/max, range) and allows row-by-row signal previewing.
+   - Interactive multi-channel ECG signal visualization using native Streamlit/Vega-Lite charts with zoom, pan, and hover tooltips.
+   - Supports stacked subplots (with distinct clinical lead colorings) and multi-lead overlay modes.
+   - Computes statistical summaries (mean, SD, min/max, voltage range) and row-level previewing.
 
-3. **❤️ ECG Classification**:
-   - Predicts cardiac conditions using pre-trained ensemble and deep learning classifiers.
-   - Automatically segments raw signals into heartbeats around R-peaks using the Pan-Tompkins algorithm before running inference.
-   - **Inference Mode (No Ground-Truth)**: If the uploaded CSV lacks diagnostic labels, the dashboard displays a downloadable **Predictions Table** detailing predicted class diagnoses and model confidence probabilities.
-   - **Evaluation Mode (With Ground-Truth)**: If labels are present, the page calculates and plots performance metrics (Accuracy, F1-Score, Sensitivity, Specificity, Confusion Matrix).
+3. **❤️ ECG Classification Engine**:
+   - Evaluates cardiac pathologies using pre-trained time-series ensemble and deep learning classifiers.
+   - Automatically segments raw signals into heartbeats around R-peaks using the Pan-Tompkins algorithm.
+   - **Inference Mode (Unlabeled Data)**: Generates downloadable **Predictions Tables** with predicted class labels and probability confidence scores.
+   - **Evaluation Mode (Ground-Truth Labeled Data)**: Displays interactive evaluation metrics (Accuracy, $F_1$-Score, Sensitivity, Specificity, Confusion Matrix).
 
-### 🔄 Workflow
+### 🔄 End-to-End Workflow
 
-The workstation coordinates the pipeline through four distinct steps: **Digitization**, **Analysis**, **Segmentation**, and **Classification**. The technical workflows for each process are documented below in their respective **How It Works** sections.
+The pipeline operates in four coordinated phases: **Digitization** $ightarrow$ **Analysis** $ightarrow$ **Segmentation** $ightarrow$ **Classification**. Architectural flowcharts for each phase are provided in the **How It Works** sections below.
 
 ---
 
 ## <a id="installation-setup"></a>🚀 Installation & Setup
 
 ### Prerequisites
-- Python 3.9
-- CUDA-capable GPU recommended (automatically falls back to CPU if unavailable).
+- **Python**: `3.9+` (tested on Python 3.9 and 3.11)
+- **Hardware**: Standard CPU (CUDA-capable GPU optional, automatically detected)
 
-### Conda Environment & Model Setup
+### Step-by-Step Installation
 
-1. Clone the repository and navigate to the project directory:
+1. **Clone the Repository**:
    ```bash
    git clone https://github.com/scai-lab/ECG-Digitization-Classification.git
    cd ECG-Digitization-Classification
    ```
 
-2. Create the conda environment using the provided `environment.yml` configuration:
+2. **Create and Activate Conda Environment**:
    ```bash
    conda env create -f environment.yml
    conda activate infer
@@ -82,18 +119,17 @@ The workstation coordinates the pipeline through four distinct steps: **Digitiza
 
    > [!IMPORTANT]
    > **Windows Compatibility & TensorFlow Setup**:
-   > If you are on Windows and encounter native runtime loading failures (`ImportError: DLL load failed while importing _pywrap_tensorflow_internal: A dynamic link library (DLL) initialization routine failed`), you need to install a stable version pairing of TensorFlow and Protobuf:
+   > If running on Windows and encountering DLL loading errors (`ImportError: DLL load failed while importing _pywrap_tensorflow_internal`), install the pinned TensorFlow and Protobuf pairing:
    > ```bash
    > pip install tensorflow==2.15.0 protobuf==4.25.3
    > ```
-   > *(Make sure no background Streamlit or Python tasks are running when executing this command, to prevent file locking issues on `.pyd` libraries).*
 
 3. **Download Pre-Trained Model Weights**:
-   Due to their file sizes, the YOLO detection checkpoints and pre-trained classifiers are hosted externally. Download the `models/` directory from the link below and place it directly in the root of the project:
+   The YOLOv11 detection checkpoints and pre-trained time-series classifiers are hosted on Polybox due to file size constraints:
    
    👉 **[Download Pre-Trained Models Directory (ETH Zürich Polybox)](https://polybox.ethz.ch/index.php/s/GDACstPtsoTrrWH)**
    
-   Once extracted, verify that the weights are located inside the directory tree structure:
+   Extract the downloaded archive and place the `models/` directory directly into the root of the project workspace:
    ```text
    models/
    ├── digitization_models/
@@ -107,56 +143,59 @@ The workstation coordinates the pipeline through four distinct steps: **Digitiza
        └── ecg_surgery/
    ```
 
-Key packages installed by the environment: `torch 2.7`, `ultralytics 8.3`, `opencv-python 4.11`, `scikit-image 0.24`, `wfdb 4.3`, `patched-yolo-infer 1.3.8`, `sktime`, `streamlit`.
+4. **Launch the Web Dashboard Workstation**:
+   ```bash
+   streamlit run app.py
+   ```
 
 ---
 
 ## <a id="pre-trained-classifiers-tasks"></a>🧠 Pre-Trained Classifiers & Tasks
 
-The classification engine supports three diagnostic tasks using the pre-trained weights in `classifier_models/`:
+The classification engine supports three distinct diagnostic tasks using the pre-trained weights in `models/classifier_models/`:
 
-| Classification Task | Model Type | Expected Input Shape | Test Accuracy | Positive Class |
+| Diagnostic Task | Model Architecture | Expected Input Tensor Shape | Test Accuracy | Target Positive Class |
 | :--- | :--- | :--- | :---: | :--- |
-| **Normal vs Myocardial Infarction (MI) - Segmented** | Arsenal | 12 leads × 140 timesteps | **92.3%** | `MYOCARDIAL_INFARCTION` |
-| **Occlusive MI (OMI) vs non-OMI** | Rocket | 12 leads × 141 timesteps | **88.9%** | `OMI` |
-| **Pre-Procedural vs Post-Procedural MI** | InceptionTime | 12 leads × 140 timesteps | **91.4%** | `pre-procedural MI` |
+| **Normal vs Myocardial Infarction (MI)** | **Arsenal** Ensemble | 12 leads $	imes$ 140 timesteps | **92.3%** | `MYOCARDIAL_INFARCTION` |
+| **Occlusive MI (OMI) vs Non-OMI** | **Rocket** Classifier | 12 leads $	imes$ 141 timesteps | **88.9%** | `OMI` |
+| **Pre-Procedural vs Post-Procedural MI** | **InceptionTime** Deep Net | 12 leads $	imes$ 140 timesteps | **91.4%** | `pre-procedural MI` |
 
-- **Arsenal**: An ensemble of ROCKET classifiers utilizing random convolutional kernels to extract feature representations combined with ridge regression.
-- **Rocket**: Random Omni-directional Kernel Extraction (ROCKET) classifier, computing kernel convolutions quickly for high-dimensional time-series data.
-- **InceptionTime**: A deep convolutional network ensemble modeled on the Inception architecture, extracting multi-scale temporal features.
+- **Arsenal**: An ensemble of ROCKET classifiers utilizing random convolutional kernels combined with ridge regression feature classification.
+- **Rocket**: Random Omni-directional Kernel Extraction classifier computing high-dimensional time-series representations.
+- **InceptionTime**: A deep 1D convolutional neural network ensemble leveraging multi-scale temporal kernel convolutions.
 
 ---
 
 ## <a id="command-line-usage"></a>🚀 Command Line Usage
 
-### Run Batch Digitization (`run_org.py`)
+### Batch Signal Digitization (`run_org.py`)
 
-The batch processing script processes nested hospital directories, exporting structured folders of digitized CSVs:
+Process structured directories of paper ECG scans in batch mode:
 
-1. Configure path variables at the top of `run_org.py`:
+1. Configure dataset directory paths in `run_org.py`:
    ```python
    ORGANIZED_DIR = "../ecg_files/ECG_organized_all"   # Input dataset root
-   OUTPUT_DIR    = "../ecg_files/ECG_digitized"       # Mirrored CSV directory
-   CATEGORIES    = ["pre", "index", "post"]           # Categories to process
+   OUTPUT_DIR    = "../ecg_files/ECG_digitized"       # Destination for CSVs
+   CATEGORIES    = ["pre", "index", "post"]           # Sub-directories
    ```
 
-2. Run the script:
+2. Run the batch digitization script:
    ```bash
    python run_org.py
    ```
 
-### Run Model Inference (`run_inference.py`)
+### Command-Line Model Inference (`run_inference.py`)
 
-Execute predictions directly on digitized data from the command line using `run_inference.py` located in `archive/classification/`:
+Run standalone inference on pre-digitized CSV datasets:
 
 ```bash
-# MI vs Normal Segmented heartbeat classification
+# 1. Normal vs MI Classification (Arsenal Model)
 python archive/classification/run_inference.py --model mi_vs_normal_segmented --input data/ptb_xl/segmented_heartbeats.csv
 
-# OMI vs non-OMI classification
+# 2. Occlusive MI (OMI) vs Non-OMI Classification (Rocket Model)
 python archive/classification/run_inference.py --model omi_vs_nonomi --input data/ecg_matrix_omi_segmented_50_150_90.csv
 
-# Custom output file path
+# 3. Custom Output Destination
 python archive/classification/run_inference.py --model ecg_surgery --input data/ecg_surgery_segmented_50_150_70.csv --output results/surgery_preds.csv
 ```
 
@@ -164,60 +203,42 @@ python archive/classification/run_inference.py --model ecg_surgery --input data/
 
 ## <a id="repository-structure-directory-organization"></a>📁 Repository Structure & Directory Organization
 
-The repository is structured to maintain a clean root directory, moving utility runners, UI views, model checkpoints, and legacy/training scripts into distinct modules:
-
 ```
 .
 ├── app.py                          # Streamlit application main router
 ├── config.py                       # Centralized configuration and model registry
 ├── digitization.py                 # Core ECGImage extraction pipeline class
-├── environment.yml                 # Conda environment dependency file
-├── README.md                       # Comprehensive repository documentation
+├── environment.yml                 # Conda environment dependency specification
+├── LICENSE                         # Non-commercial academic license agreement
+├── README.md                       # Repository documentation
 │
 ├── backend/                        # Dashboard background execution adapters
-│   ├── __init__.py                 # Backend package declaration
+│   ├── __init__.py                 # Package initializer
 │   ├── digitization_runner.py      # YOLO loader and single-image processor
-│   └── classification_runner.py    # Pre-trained model loader and preprocessor
+│   └── classification_runner.py    # Model loader and inference adapter
 │
-├── utils/                          # Streamlit front-end page components
-│   ├── __init__.py                 # Utils package declaration
-│   ├── branding.py                 # Sidebar titles, headers, and footer logos
-│   ├── css.py                      # Custom clinical theme and grid background CSS
-│   ├── hardware.py                 # Displays CPU/GPU hardware properties (cached)
-│   ├── page_digitizer.py           # Front-end for the ECG Digitizer page
-│   ├── page_csv_viewer.py          # Front-end for the interactive Signal Viewer
-│   └── page_classifier.py          # Front-end for the Classification workstation
+├── utils/                          # Streamlit front-end UI view components
+│   ├── __init__.py                 # Package initializer
+│   ├── branding.py                 # Header titles and institutional footer logos
+│   ├── css.py                      # Custom clinical theme and styling utilities
+│   ├── hardware.py                 # Hardware detector (CPU/GPU)
+│   ├── page_digitizer.py           # ECG Digitizer page view
+│   ├── page_csv_viewer.py          # Interactive Signal Viewer page view
+│   └── page_classifier.py          # Classification workstation page view
 │
-├── models/                         # Relocated YOLO checkpoints and classifiers
-│   ├── digitization_models/        # YOLO v11 checkpoints for digitization
-│   │   ├── yolo11_full/            # YOLO Bounding boxes
-│   │   ├── yolo11_lead/            # YOLO Lead names
-│   │   ├── yolo11_pulse/           # YOLO Reference pulses
-│   │   └── yolo11_patch/           # YOLO Waveform segmentations
-│   │
-│   └── classifier_models/          # Bundled pre-trained diagnostic classifiers
-│       ├── mi_vs_normal_segmented/ # Pre-trained Arsenal model (segmented beats)
-│       ├── omi_vs_nonomi/          # Pre-trained Rocket model (segmented beats)
-│       └── ecg_surgery/            # Pre-trained InceptionTime model (segmented beats)
+├── models/                         # Relocated YOLO checkpoints and classifiers (external)
+│   ├── digitization_models/        # YOLOv11 weights (full, lead, pulse, patch)
+│   └── classifier_models/          # Pre-trained classifier weights (Arsenal, Rocket, InceptionTime)
 │
-└── archive/                        # Archived developer, training, and legacy scripts
-    └── classification/             
-        ├── train_and_save_models.py# Script used to compile pre-trained models
-        ├── run_inference.py        # Independent CLI inference execution script
-        ├── run_classification.py   # Baseline MLP classifier pipeline
-        ├── run_benchmarking.py     # Comparison benchmarking suite
-        ├── run_lead_importance_test.py# Individual lead performance evaluator
-        ├── feature_analysis.py     # Original all-in-one analysis script
-        ├── aggregate_subject_metrics.py# Multi-subject performance aggregator
-        ├── dataset_curate.py       # Local dataset curation utility
-        └── re_plotter.py           # Advanced Gaussian signal generator & visualizer
+└── archive/                        # Archived research, training, and CLI scripts (local)
+    └── classification/             # Baseline training and evaluation scripts
 ```
 
 ---
 
 ## <a id="how-it-works-signal-digitization"></a>📷 How It Works: Signal Digitization
 
-The core class [digitization.py](file:///d:/Projects/ECGLight/digitization.py) operates a multi-stage sequential computer vision pipeline to translate raster images into digitized signals:
+The core engine in `digitization.py` executes a multi-stage computer vision workflow to convert image pixels into calibrated voltage waveforms:
 
 ```mermaid
 graph TD
@@ -237,21 +258,19 @@ graph TD
     G --> H[Export latest_digitized.csv]
 ```
 
-1. **Preprocessing**: Cleans the scanned image using shadow-removal masks, Otsu binarization, and Gaussian blurring to isolate ink lines from paper textures.
-2. **YOLO Segmentation**: Applies a patched YOLO segmentation model at three crop scales (`4×`, `4.5×`, and `5×` height) to isolate individual lead waveform contours.
-3. **Sequential Detections**: Runs three YOLO models in parallel:
+1. **Image Preprocessing**: Cleans input scans using shadow removal, Otsu binarization, and Gaussian blurring to separate ink traces from paper texture.
+2. **YOLO Segmentation**: Applies patched YOLO segmentation models across multiple crop scales (`4×`, `4.5×`, `5×`) to bound individual lead regions.
+3. **Multi-Model Object Detection**: Runs YOLO detectors in parallel:
    - `yolo11_full`: Bounding boxes for the 12 lead channels.
-   - `yolo11_lead`: Text labels representing lead names (I, II, aVR...).
-   - `yolo11_pulse`: Bounding boxes for the calibration reference pulses (typically 1mV high, representing vertical scale).
-4. **Scale Calibration**: Fits Hough lines to the calibration pulse boundaries. The pixel height determines the voltage scale (`volt/pixel`), while the width determines the time scale (`time/pixel`).
-5. **Grid Construction**: Employs K-Means clustering on lead coordinates to map rows and columns, automatically parsing standard Cabrera orders and grid formats (3×4, 4×3, 6×2, 12×1).
-6. **Signal Extraction & Post-Processing**: Traces contours to extract raw pixel centroids, performs baseline correction, applies linear interpolation to bridge gaps, and resamples to a standard **500 Hz** frequency calibrated in **millivolts (mV)**. In addition, an **anti-leakage component filter** is executed per cell crop using connected components analysis to automatically identify the primary waveform trace and strip out smaller, boundary-adjacent components (leaked signals from neighboring leads) that sit far from the row baseline.
+   - `yolo11_lead`: Text label identification (I, II, aVR, V1-V6).
+   - `yolo11_pulse`: Bounding boxes for 1 mV calibration reference pulses.
+4. **Scale Calibration**: Fits Hough lines to calibration pulse boundaries to compute exact voltage scaling ($	ext{V}/	ext{px}$) and time scaling ($	ext{s}/	ext{px}$).
+5. **Grid Construction**: Employs K-Means clustering on lead coordinates to construct regular grid layouts (3×4, 4×3, 6×2, 12×1) and resolve standard Cabrera lead ordering.
+6. **Contour Tracing & Anti-Leakage Filtering**: Traces pixel centroids, baseline-corrects waveforms, and applies an **anti-leakage connected-component filter** per crop to isolate primary waveform traces from adjacent lead leakage. Signals are resampled to **500 Hz** calibrated in **mV**.
 
 ---
 
 ## <a id="how-it-works-signal-analysis-visualization"></a>📈 How It Works: Signal Analysis & Visualization
-
-Once continuous signals are extracted, the dashboard runs analytical tasks and displays interactive previews:
 
 ```mermaid
 graph TD
@@ -263,15 +282,15 @@ graph TD
     D --> E[Display Summary Dataframes & Row Previews]
 ```
 
-1. **Parse Signals**: Reads digitized CSV format, validating lead names and timestamps.
-2. **Vega-Lite Visualization**: Renders interactive charts supporting native client-side zoom, pan, and hover tooltips for all channels.
-3. **Signal Statistics**: Automatically computes statistical characteristics (mean, standard deviation, min/max values) for each lead.
+1. **Signal Parsing**: Validates multi-lead CSV headers, timestamps, and sampling consistency.
+2. **Interactive Rendering**: Native Vega-Lite charts enable client-side pan, zoom, and multi-channel hover tooltips.
+3. **Statistical Profiling**: Calculates lead-level statistical metrics (mean, standard deviation, voltage range, min/max).
 
 ---
 
 ## <a id="how-it-works-heartbeat-segmentation"></a>⚡ How It Works: Heartbeat Segmentation
 
-To prepare continuous digitized signals for the classification models, the pipeline runs the Pan-Tompkins R-peak detection algorithm:
+Prepares continuous 12-lead signals for classification models via Pan-Tompkins R-peak detection:
 
 ```mermaid
 graph TD
@@ -284,18 +303,15 @@ graph TD
     G --> H[Max-Absolute Voltage Normalization]
 ```
 
-1. **Filtering**: The Lead II signal is filtered via a bandpass filter (5-15 Hz) to suppress muscle noise, baseline wander, and T-wave interference.
-2. **Differentiation**: Computes the slope of the signal to highlight the rapid change in the QRS complex.
-3. **Squaring**: Performs point-by-point squaring to amplify QRS slopes while attenuating smaller waves.
-4. **Integration**: A moving window integrator (typically 150ms wide) compiles the slope information into a peak window.
-5. **Adaptive Thresholding & Peak Search**: Dynamically computes threshold constants based on average noise and signal levels, locating R-peaks.
-6. **Beat Windowing**: Extracts a localized heartbeat around each R-peak (typically extending 50ms before and 150ms after the peak), normalizes the voltage per heartbeat using max-absolute scaling, and truncates/pads the resulting segments to the target model input width (e.g. 140 or 141 timesteps).
+1. **Bandpass Filtering**: 5–15 Hz bandpass filter isolates QRS energy while suppressing muscle artifact and baseline wander.
+2. **Differentiation & Squaring**: Highlights steep QRS slopes and attenuates P/T waves.
+3. **Moving Window Integration**: Integrates energy across a 150 ms window to delineate QRS complexes.
+4. **Adaptive Thresholding**: Dynamically searches for R-peak maxima.
+5. **Beat Windowing & Normalization**: Extracts beat windows centered around R-peaks (50 ms pre-R, 150 ms post-R), normalizes max-absolute voltage, and formats output tensors (140/141 timesteps).
 
 ---
 
 ## <a id="how-it-works-cardiac-classification"></a>🧠 How It Works: Cardiac Classification
-
-The heartbeat segment tensors are evaluated using pre-trained time-series classification models:
 
 ```mermaid
 graph TD
@@ -312,16 +328,15 @@ graph TD
     E --> F[Generate Downloadable Predictions CSV]
 ```
 
-1. **Numpy3D Formatting**: Formats the heartbeat segments into a standard `sktime` `Numpy3D` tensor with shape `(N_instances, 12_leads, N_timesteps)`.
-2. **Dynamic Task Selection**: Loads the pre-trained pickled model corresponding to the selected classification task.
-3. **Model Inference**: Evaluates the model to compute class predictions and probability confidences.
-4. **Result Generation**: Automatically builds downloadable prediction tables and calculates performance metrics if ground-truth labels are present in the dataset.
+1. **Tensor Formatting**: Formats heartbeat segments into 3D NumPy arrays `(N_samples, 12_leads, N_timesteps)`.
+2. **Model Evaluation**: Invokes the pre-trained pickled estimator for the selected diagnostic endpoint.
+3. **Report Generation**: Formats class predictions, confidence probabilities, and diagnostic metrics for export.
 
 ---
 
 ## <a id="collaborating-institutions"></a>🤝 Collaborating Institutions
 
-This project was developed in collaboration with:
+This research project was developed in multi-center academic and clinical collaboration:
 
 - [ETH Zürich](https://ethz.ch)
 - [Istituto Cardiocentro Ticino (EOC)](https://www.cardiocentro.org)
@@ -348,7 +363,20 @@ This project was developed in collaboration with:
 
 ---
 
+## <a id="authors-contact"></a>👥 Authors & Contact
+
+- **Shreyasvi Natraj** — [snatraj@ethz.ch](mailto:snatraj@ethz.ch)
+- **Cyrus Achtari**
+- **Felice Gragnano**
+- **Andrea Milzi**
+- **Marco Valgimigli**
+- **Diego Paez-Granados**
+
+---
+
 ## <a id="citation"></a>📄 Citation
+
+If you use **ECGLight** or its pre-trained models in your research, please cite our arXiv preprint:
 
 ```bibtex
 @article{natraj2026ecglight,
@@ -361,15 +389,11 @@ This project was developed in collaboration with:
 }
 ```
 
----
-
-## <a id="authors-contact"></a>👥 Authors & Contact
-
-- **Shreyasvi Natraj** — [snatraj@ethz.ch](mailto:snatraj@ethz.ch)
-- **Cyrus Achtari**
+> **APA Citation**:
+> Natraj, S., Achtari, C., Gragnano, F., Milzi, A., Valgimigli, M., & Paez-Granados, D. (2026). ECGLight: Compute-Light Framework For Paper ECG Digitization and Myocardial Infarction Screening. *arXiv preprint arXiv:2607.07683*. https://arxiv.org/abs/2607.07683
 
 ---
 
 ## <a id="license"></a>📄 License
 
-This project is released under the **Non-Commercial Academic and Research License Agreement**. Please refer to the [LICENSE](file:///d:/Projects/ECGLight/LICENSE) file in the repository root for the full licensing terms. The codebase and trained model weights are provided free of charge for personal, academic, and non-profit research use only. Commercial use is strictly prohibited.
+This repository and model weights are released under the **Non-Commercial Academic and Research License Agreement**. Please refer to the [LICENSE](LICENSE) file for full terms. Free for non-profit academic and research use. Commercial use is strictly prohibited.
